@@ -1,0 +1,8 @@
+.github
+.pre-commit-config.yaml
+src
+tsconfig.json
+tslint.json
+.prettierignore
+examples
+.codeclimate.yml
