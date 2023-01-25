@@ -12,7 +12,7 @@ beforeEach(() => {
   cfnMock.reset();
 });
 
-describe("getAllStagesForRegion command's tests", () => {
+describe("getAllFindings command's tests", () => {
   process.env.PROJECT = "myProject";
   const sampleStackResponse = {
     StackName: "Bob",
@@ -34,7 +34,7 @@ describe("getAllStagesForRegion command's tests", () => {
       ],
     });
     const workflowFunction = vi.fn((region) =>
-      SecurityHubSync.getAllStagesForRegion(region)
+      SecurityHubSync.getAllFindings(region)
     );
 
     const runningStages = await workflowFunction("my-region");
@@ -50,7 +50,7 @@ describe("getAllStagesForRegion command's tests", () => {
       Stacks: [sampleStackResponse],
     });
     const workflowFunction = vi.fn((region) =>
-      SecurityHubSync.getAllStagesForRegion(region)
+      SecurityHubSync.getAllFindings(region)
     );
 
     const runningStages = await workflowFunction("my-region");
