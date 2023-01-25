@@ -41,7 +41,7 @@ yarn add --dev @enterprise-cmcs/macpro-security-hub-sync
 After installing the package in your project include this import statement
 
 ```
-import { SecurityHubSync } from "@enterprise-cmcs/macpro-security-hub-sync";
+import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 ```
 
 With SecurityHubSync imported you can now execute it like:
