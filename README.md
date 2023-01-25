@@ -29,13 +29,13 @@
 To install the package run the following command:
 
 ```
-npm install @enterprise-cmcs/macpro-security-hub-sync
+npm install --save-dev @enterprise-cmcs/macpro-security-hub-sync
 ```
 
 or
 
 ```
-yarn add @enterprise-cmcs/macpro-security-hub-sync
+yarn add --dev @enterprise-cmcs/macpro-security-hub-sync
 ```
 
 After installing the package in your project include this import statement
