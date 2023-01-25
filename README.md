@@ -44,10 +44,10 @@ After installing the package in your project include this import statement
 import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 ```
 
-With SecurityHubSync imported you can now execute it like:
+With SecurityHubJiraSync imported you can now execute it like:
 
 ```
-await SecurityHubSync.getAllStagesForRegion("us-east-1");
+await SecurityHubJiraSync.getAllFindings("us-east-1");
 ```
 
 ## Contributing
