@@ -8,7 +8,6 @@
   "description": "NPM module to create Jira tickets for all findings in Security Hub for the current AWS account..",
   "main": "./dist/index.js",
   "typings": "./dist/index.js",
-  "type": "module",
   "scripts": {
     "bp": "rm -rf ./dist && rm -rf ./node_modules && npm i --save && tsc && npm publish",
     "build": "tsc",
