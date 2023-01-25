@@ -1,5 +1,5 @@
-<h1 align="center" style="border-bottom: none;"> macpro-security-hub-sync</h1>
-<h3 align="center">NPM module to create Jira tickets for all findings in Security Hub for the current AWS account..</h3>
+<h1 align="center" style="border-bottom: none;">macpro-security-hub-sync</h1>
+<h3 align="center">NPM module to create Jira tickets for all findings in Security Hub for the current AWS account.</h3>
 <p align="center">
   <a href="https://github.com/Enterprise-CMCS/macpro-security-hub-sync/releases/latest">
     <img alt="latest release" src="https://img.shields.io/github/release/Enterprise-CMCS/macpro-security-hub-sync.svg">
@@ -91,6 +91,6 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 
 ## License
 
-[![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 See [LICENSE](LICENSE) for full details.
