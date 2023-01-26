@@ -300,3 +300,19 @@ ${finding.Recommendation.Text}
     }
   }
 }
+
+async function TODO_temp_testing() {
+  console.log("hi");
+
+  const mySync = new SecurityHubJiraSync({
+    // repository: "myorgname/myrepositoryname", // (required) The name of the repository in which to create Tickets.  If GH Actions, use process.env.GITHUB_REPOSITORY
+    // auth: process.env.GITHUB_TOKEN, // (required)  A PAT with access to create tickets.  If GH Actions, use process.env.GITHUB_TOKEN
+    // accountNickname: "dev", // (required) A sensible account nickname; will be used to label tickets.
+    region: "us-east-1", // (optional, default: us-east-1) The SecHub region at which to look.
+    severity: ["CRITICAL", "HIGH"], // (optional, default: ['CRITICAL','HIGH']) The finding types for which you want to create tickets.
+  });
+
+  console.log(await mySync.sync());
+}
+
+TODO_temp_testing();
