@@ -248,27 +248,31 @@ ${finding.Recommendation.Text}
     var findingsTitles = _.map(findings, "Title");
     // Search for open tickets that do not have a corresponding active SH finding.
     for (let i = 0; i < tickets.length; i++) {
-      let issue = tickets[i];
-      if (issue.state != "open") continue; // We only care about open tickets here.
-      let issueTitle = issue.body.match(findingTitleRegex);
-      if (issueTitle && findingsTitles.includes(issueTitle[0])) {
+      const ticket = tickets[i];
+      if (ticket.state !== "open") continue; // We only care about open tickets here.
+      const ticketTitle = ticket.body.match(findingTitleRegex);
+      if (ticketTitle && findingsTitles.includes(ticketTitle[0])) {
         console.log(
-          `Issue ${issue.number}:  Underlying finding found.  Doing nothing...`
+          `Ticket ${ticket.number}:  Underlying finding found.  Doing nothing...`
         );
       } else {
         console.log(
-          `Issue ${issue.number}:  No underlying finding found.  Closing issue...`
+          `Ticket ${ticket.number}:  No underlying finding found.  Closing ticket...`
         );
-        await this.octokit.rest.tickets.update({
-          ...this.octokitRepoParams,
-          issue_number: issue.number,
-          state: "closed",
-        });
+        // TODO: update this GitHub logic to Jira logic
+        // await this.octokit.rest.tickets.update({
+        //   ...this.octokitRepoParams,
+        //   ticket_number: ticket.number,
+        //   state: "closed",
+        // });
       }
     }
   }
 
-  async createOrUpdateTicketsBasedOnFindings(findings: string | any[], tickets: string | any[]) {
+  async createOrUpdateTicketsBasedOnFindings(
+    findings: string | any[],
+    tickets: string | any[]
+  ) {
     console.log(
       `******** Creating or updating Jira Tickets based on Security Hub findings. ********`
     );
