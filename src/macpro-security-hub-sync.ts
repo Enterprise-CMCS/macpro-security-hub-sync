@@ -149,7 +149,7 @@ export class SecurityHubJiraSync {
     return tickets;
   }
 
-  issueParamsForFinding(finding: Finding) {
+  ticketParamsForFinding(finding: Finding) {
     return {
       title: `SecurityHub Finding - ${finding.Title}`,
       state: "open",
@@ -160,10 +160,10 @@ export class SecurityHubJiraSync {
         this.accountNickname,
       ],
       body: `**************************************************************
-__This issue was generated from Security Hub data and is managed through automation.__
-Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.
-Finding Title: ${finding.Title}
-**************************************************************
+  __This ticket was generated from Security Hub data and is managed through automation.__
+  Please do not edit the title or body of this ticket, or remove the security-hub tag.  All other edits/comments are welcome.
+  Finding Title: ${finding.Title}
+  **************************************************************
 
 
 ## Type of Issue:
