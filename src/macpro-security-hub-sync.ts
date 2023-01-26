@@ -55,6 +55,7 @@ export class SecurityHubJiraSync {
     });
     const client = new SecurityHubClient({ region: this.region });
 
+    // TODO: update the NextToken logic below to follow a pattern like this
     // for await (const page of paginateDescribeStacks({ client }, {})) {
     //   if (page.Stacks) {
     //     stages.push(
@@ -73,8 +74,8 @@ export class SecurityHubJiraSync {
     //       )
 
     for await (const lf of (async function* () {
-      let NextToken = EMPTY;
-      while (NextToken || NextToken === EMPTY) {
+      let NextToken;
+      do {
         const functions = await client.send(
           new GetFindingsCommand({
             Filters: {
@@ -108,11 +109,12 @@ export class SecurityHubJiraSync {
         );
         yield* functions.Findings;
         NextToken = functions.NextToken;
-      }
+      } while (NextToken);
     })()) {
+      console.log("TODO res:", res);
       res.push(lf);
     }
-    var formattedFindings = _.map(res, function (finding) {
+    const formattedFindings = _.map(res, function (finding) {
       return {
         Title: finding.Title,
         Description: finding.Description,
@@ -127,7 +129,7 @@ export class SecurityHubJiraSync {
               },
       };
     });
-    const uniqueFindings: Finding[] = _.uniqBy(formattedFindings, "Title");
+    const uniqueFindings = _.uniqBy(formattedFindings, "Title");
     return uniqueFindings;
   }
 
