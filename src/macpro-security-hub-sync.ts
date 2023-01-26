@@ -6,6 +6,7 @@ import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import _ from "lodash";
 const findingTitleRegex = /(?<=\nFinding Title: ).*/g;
 
+// TODO: figure out types of everything being used.
 interface Finding {
   Title: string;
   Description: string;
@@ -15,28 +16,26 @@ interface Finding {
 }
 
 export class SecurityHubJiraSync {
-  severity: string[];
-  octokitRepoParams: { owner: string; repo: string };
-  region: string;
-  accountNickname?: string;
+  private severity: string[];
+  private region: string;
+  private accountNickname: string | null;
+
   constructor(options: {
-    severity: string[];
-    repository: string;
-    auth: string;
-    region: string;
+    severity?: string[];
+    region?: string;
     accountNickname?: string;
   }) {
     this.severity = options.severity || ["MEDIUM", "HIGH", "CRITICAL"]; // TODO: remove MEDIUM when finished with dev.
     this.region = options.region || "us-east-1";
-    this.accountNickname = options.accountNickname;
+    this.accountNickname = options.accountNickname || null;
   }
 
   async sync() {
     if (!this.accountNickname) {
       const stsClient = new STSClient({ region: this.region });
-      this.accountNickname = (
-        await stsClient.send(new GetCallerIdentityCommand({}))
-      ).Account;
+      this.accountNickname =
+        (await stsClient.send(new GetCallerIdentityCommand({}))).Account ??
+        null;
     }
     const findings = await this.getAllActiveFindings();
     const tickets = await this.getAllTickets();
