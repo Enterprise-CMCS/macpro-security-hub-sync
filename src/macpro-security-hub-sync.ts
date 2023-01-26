@@ -1,9 +1,10 @@
 import {
   SecurityHubClient,
   GetFindingsCommand,
+  AwsSecurityFindingFilters,
+  AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import _ from "lodash";
 const findingTitleRegex = /(?<=\nFinding Title: ).*/g;
 
 // TODO: figure out types of everything being used.
@@ -12,12 +13,16 @@ interface Finding {
   Description: string;
   Severity: string;
   Region: string;
-  Recommendation: string;
+  Recommendation: { Url: string; Text: string };
 }
-// Title;
-// Severity;
-// Description;
-// Recommendation: { Url; Text };
+
+interface Ticket {
+  labels: any[];
+  title: string;
+  state: string;
+  body: string;
+  number: any;
+}
 
 export class SecurityHubJiraSync {
   private severity: string[];
@@ -48,93 +53,69 @@ export class SecurityHubJiraSync {
   }
 
   async getAllActiveFindings() {
-    const EMPTY = Symbol("empty");
-    const res = [];
-    const severityLabels: { Comparison: string; Value: string }[] = [];
-    this.severity.forEach((label) => {
-      severityLabels.push({
-        Comparison: "EQUALS",
-        Value: label,
-      });
-    });
     const client = new SecurityHubClient({ region: this.region });
-
-    // TODO: update the NextToken logic below to follow a pattern like this
-    // for await (const page of paginateDescribeStacks({ client }, {})) {
-    //   if (page.Stacks) {
-    //     stages.push(
-    //       ...new Set(
-    //         page.Stacks.reduce((acc: string[], stack: Stack) => {
-    //           const tags = tagsListToTagDict(stack.Tags || []);
-    //           if (
-    //             tags["STAGE"] &&
-    //             tags["PROJECT"] === process.env.PROJECT &&
-    //             !ignoreStages.includes(tags["STAGE"])
-    //           ) {
-    //             acc.push(tags["STAGE"]);
-    //           }
-    //           return acc;
-    //         }, [])
-    //       )
-
-    for await (const lf of (async function* () {
-      let NextToken;
-      do {
-        const functions = await client.send(
-          new GetFindingsCommand({
-            Filters: {
-              RecordState: [
-                {
-                  Comparison: "EQUALS",
-                  Value: "ACTIVE",
-                },
-              ],
-              WorkflowStatus: [
-                {
-                  Comparison: "EQUALS",
-                  Value: "NEW",
-                },
-                {
-                  Comparison: "EQUALS",
-                  Value: "NOTIFIED",
-                },
-              ],
-              ProductName: [
-                {
-                  Comparison: "EQUALS",
-                  Value: "Security Hub",
-                },
-              ],
-              SeverityLabel: severityLabels,
+    const severityLabels = this.severity.map((label) => ({
+      Comparison: "EQUALS",
+      Value: label,
+    }));
+    const filters = {
+      RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
+      WorkflowStatus: [
+        { Comparison: "EQUALS", Value: "NEW" },
+        { Comparison: "EQUALS", Value: "NOTIFIED" },
+      ],
+      ProductName: [{ Comparison: "EQUALS", Value: "Security Hub" }],
+      SeverityLabel: severityLabels,
+    };
+    const findings = await this.getAllResultsFromPagination(client, filters);
+    const formattedFindings = findings.map((finding) => ({
+      Title: finding.Title,
+      Description: finding.Description,
+      Severity: finding.Severity ?? { Label: "" }.Label,
+      Region: finding.Region,
+      Recommendation:
+        finding.Remediation && finding.Remediation.Recommendation
+          ? finding.Remediation.Recommendation
+          : {
+              Url: "No Recommendation URL provided.",
+              Text: "No Recommendation Text provided.",
             },
-            MaxResults: 100,
-            NextToken: NextToken !== EMPTY ? NextToken : undefined,
-          })
-        );
-        yield* functions.Findings;
-        NextToken = functions.NextToken;
-      } while (NextToken);
-    })()) {
-      console.log("TODO res:", res);
-      res.push(lf);
-    }
-    const formattedFindings = _.map(res, function (finding) {
-      return {
-        Title: finding.Title,
-        Description: finding.Description,
-        Severity: finding.Severity.Label,
-        Region: finding.Region,
-        Recommendation:
-          finding.Remediation && finding.Remediation.Recommendation
-            ? finding.Remediation.Recommendation
-            : {
-                Url: "No Recommendation URL provided.",
-                Text: "No Recommendation Text provided.",
-              },
-      };
+    }));
+    const titles = new Set();
+    return formattedFindings.filter((finding) => {
+      if (titles.has(finding.Title)) {
+        return false;
+      } else {
+        titles.add(finding.Title);
+        return true;
+      }
     });
-    const uniqueFindings = _.uniqBy(formattedFindings, "Title");
-    return uniqueFindings;
+  }
+
+  async getAllResultsFromPagination(
+    client: SecurityHubClient,
+    filters: AwsSecurityFindingFilters,
+    nextToken: string | undefined = undefined
+  ): Promise<AwsSecurityFinding[]> {
+    const response = await client.send(
+      new GetFindingsCommand({
+        Filters: filters,
+        MaxResults: 100,
+        NextToken: nextToken,
+      })
+    );
+    const findings = response.Findings;
+    if (response.NextToken) {
+      return (findings ?? []).concat(
+        await this.getAllResultsFromPagination(
+          client,
+          filters,
+          response.NextToken
+        )
+      );
+    } else {
+      return findings ?? [];
+    }
   }
 
   async getAllTickets() {
@@ -194,7 +175,7 @@ ${finding.Recommendation.Text}
     };
   }
 
-  async createNewJiraTicket(finding) {
+  async createNewJiraTicket(finding: Finding) {
     console.log("TODO: create Jira ticket.");
     console.log("finding:", finding);
 
@@ -208,9 +189,9 @@ ${finding.Recommendation.Text}
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
-  async updateTicketIfItsDrifted(finding, ticket) {
+  async updateTicketIfItsDrifted(finding: Finding, ticket: Ticket) {
     let ticketParams = this.ticketParamsForFinding(finding);
-    let ticketLabels = [];
+    let ticketLabels: (string | null)[] = [];
     ticket.labels.forEach((label) => {
       ticketLabels.push(label.name);
     });
@@ -236,7 +217,10 @@ ${finding.Recommendation.Text}
     }
   }
 
-  async closeTicketsWithoutAnActiveFinding(findings, tickets) {
+  async closeTicketsWithoutAnActiveFinding(
+    findings: Finding[],
+    tickets: Ticket[]
+  ) {
     console.log(
       `******** Discovering and closing any open Jira Tickets without an underlying, active Security Hub finding. ********`
     );
