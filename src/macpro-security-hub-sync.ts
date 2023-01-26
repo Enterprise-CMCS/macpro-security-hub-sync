@@ -14,6 +14,10 @@ interface Finding {
   Region: string;
   Recommendation: string;
 }
+// Title;
+// Severity;
+// Description;
+// Recommendation: { Url; Text };
 
 export class SecurityHubJiraSync {
   private severity: string[];
@@ -166,7 +170,7 @@ export class SecurityHubJiraSync {
   **************************************************************
 
 
-## Type of Issue:
+## Type of Ticket:
 
 - [x] Security Hub Finding
 
@@ -190,65 +194,57 @@ ${finding.Recommendation.Text}
     };
   }
 
-  async createNewJiraTicket(finding: string) {
+  async createNewJiraTicket(finding) {
     console.log("TODO: create Jira ticket.");
     console.log("finding:", finding);
 
+    // TODO: update this GitHub logic to Jira logic
     // await this.octokit.rest.tickets.create({
     //   ...this.octokitRepoParams,
-    //   ...this.issueParamsForFinding(finding),
+    //   ...this.ticketParamsForFinding(finding),
     // });
-    // // Due to github secondary rate limiting, we will take a 5s pause after creating tickets.
-    // // See:  https://docs.github.com/en/rest/overview/resources-in-the-rest-api#secondary-rate-limits
-    // await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Due to github secondary rate limiting, we will take a 5s pause after creating tickets.
+    // See: https://docs.github.com/en/rest/overview/resources-in-the-rest-api#secondary-rate-limits
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
-  async updateTicketIfItsDrifted(
-    finding: string,
-    issue: {
-      labels: string[];
-      title: string;
-      state: string;
-      body: string;
-      number: string;
-    }
-  ) {
-    let issueParams = this.issueParamsForFinding(finding);
-    let issueLabels: string[] = [];
-    issue.labels.forEach(function (label: { name: string }) {
-      issueLabels.push(label.name);
+  async updateTicketIfItsDrifted(finding, ticket) {
+    let ticketParams = this.ticketParamsForFinding(finding);
+    let ticketLabels = [];
+    ticket.labels.forEach((label) => {
+      ticketLabels.push(label.name);
     });
     if (
-      issue.title != issueParams.title ||
-      issue.state != issueParams.state ||
-      issue.body != issueParams.body ||
-      !issueParams.labels.every((v) => issueLabels.includes(v))
+      ticket.title != ticketParams.title ||
+      ticket.state != ticketParams.state ||
+      ticket.body != ticketParams.body ||
+      !ticketParams.labels.every((v) => ticketLabels.includes(v))
     ) {
-      console.log(`Issue ${issue.number}:  drift detected.  Updating issue...`);
-      await this.octokit.rest.tickets.update({
-        ...this.octokitRepoParams,
-        ...issueParams,
-        issue_number: issue.number,
-      });
+      console.log(
+        `Ticket ${ticket.number}:  drift detected.  Updating ticket...`
+      );
+      // TODO: update this GitHub logic to Jira logic
+      // await this.octokit.rest.tickets.update({
+      //   ...this.octokitRepoParams,
+      //   ...ticketParams,
+      //   ticket_number: ticket.number,
+      // });
     } else {
       console.log(
-        `Issue ${issue.number}:  Issue is up to date.  Doing nothing...`
+        `Ticket ${ticket.number}:  Ticket is up to date.  Doing nothing...`
       );
     }
   }
 
-  async closeTicketsWithoutAnActiveFinding(
-    findings: _.NumericDictionary<unknown> | null | undefined,
-    tickets: string | string[]
-  ) {
+  async closeTicketsWithoutAnActiveFinding(findings, tickets) {
     console.log(
-      `******** Discovering and closing string open GitHub Tickets without an underlying, active Security Hub finding. ********`
+      `******** Discovering and closing any open Jira Tickets without an underlying, active Security Hub finding. ********`
     );
 
     // Store all finding ids in an array
     const findingsTitles = findings.map((finding) => finding.Title);
 
-    console.log("findingsTitles:", findingsTitles);
+    console.log("TODO findingsTitles:", findingsTitles);
 
     // Search for open tickets that do not have a corresponding active SH finding.
     for (let i = 0; i < tickets.length; i++) {
