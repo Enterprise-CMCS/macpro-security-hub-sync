@@ -7,10 +7,18 @@ import { Octokit } from "octokit";
 import _ from "lodash";
 const findingTitleRegex = /(?<=\nFinding Title: ).*/g;
 
+interface Finding {
+  Title: string;
+  Description: string;
+  Severity: string;
+  Region: string;
+  Recommendation: string;
+}
+
 export class SecurityHubJiraSync {
   severity: string[];
   octokitRepoParams: { owner: string; repo: string };
-  octokit: string;
+  octokit: Octokit;
   region: string;
   accountNickname?: string;
   constructor(options: {
@@ -54,6 +62,24 @@ export class SecurityHubJiraSync {
       });
     });
     const client = new SecurityHubClient({ region: this.region });
+
+    // for await (const page of paginateDescribeStacks({ client }, {})) {
+    //   if (page.Stacks) {
+    //     stages.push(
+    //       ...new Set(
+    //         page.Stacks.reduce((acc: string[], stack: Stack) => {
+    //           const tags = tagsListToTagDict(stack.Tags || []);
+    //           if (
+    //             tags["STAGE"] &&
+    //             tags["PROJECT"] === process.env.PROJECT &&
+    //             !ignoreStages.includes(tags["STAGE"])
+    //           ) {
+    //             acc.push(tags["STAGE"]);
+    //           }
+    //           return acc;
+    //         }, [])
+    //       )
+
     for await (const lf of (async function* () {
       let NextToken = EMPTY;
       while (NextToken || NextToken === EMPTY) {
@@ -109,7 +135,7 @@ export class SecurityHubJiraSync {
               },
       };
     });
-    var uniqueFindings = _.uniqBy(formattedFindings, "Title");
+    const uniqueFindings: Finding[] = _.uniqBy(formattedFindings, "Title");
     return uniqueFindings;
   }
 
@@ -128,12 +154,7 @@ export class SecurityHubJiraSync {
     return tickets;
   }
 
-  issueParamsForFinding(finding: {
-    Title: string;
-    Severity: string;
-    Description: string;
-    Recommendation: { Url: string; Text: string };
-  }) {
+  issueParamsForFinding(finding: Finding) {
     return {
       title: `SecurityHub Finding - ${finding.Title}`,
       state: "open",
@@ -254,7 +275,7 @@ ${finding.Recommendation.Text}
   }
 
   async createOrUpdateTicketsBasedOnFindings(
-    findings: string | string[],
+    findings: Finding[],
     tickets: string | string[]
   ) {
     console.log(
