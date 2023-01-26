@@ -46,8 +46,8 @@ export class SecurityHubJiraSync {
   async getAllActiveFindings() {
     const EMPTY = Symbol("empty");
     const res = [];
-    let severityLabels: { Comparison: string; Value: string }[] = [];
-    this.severity.forEach(function (label) {
+    const severityLabels: { Comparison: string; Value: string }[] = [];
+    this.severity.forEach((label) => {
       severityLabels.push({
         Comparison: "EQUALS",
         Value: label,
