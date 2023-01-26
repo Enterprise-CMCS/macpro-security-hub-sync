@@ -268,21 +268,18 @@ ${finding.Recommendation.Text}
     }
   }
 
-  async createOrUpdateTicketsBasedOnFindings(
-    findings: Finding[],
-    tickets: string | string[]
-  ) {
+  async createOrUpdateTicketsBasedOnFindings(findings: string | any[], tickets: string | any[]) {
     console.log(
-      `******** Creating or updating GitHub Tickets based on Security Hub findings. ********`
+      `******** Creating or updating Jira Tickets based on Security Hub findings. ********`
     );
-    // Search for active SH findings that don't have an open issue
+    // Search for active SH findings that don't have an open ticket
     for (let i = 0; i < findings.length; i++) {
-      var finding = findings[i];
+      const finding = findings[i];
       let hit = false;
       for (let j = 0; j < tickets.length; j++) {
-        var issue = tickets[j];
-        let issueTitle = issue.body.match(findingTitleRegex);
-        if (finding.Title == issueTitle) {
+        const ticket = tickets[j];
+        const ticketTitle = ticket.body.match(findingTitleRegex);
+        if (finding.Title == ticketTitle) {
           hit = true;
           console.log(
             `Finding ${finding.Title}:  Ticket ${ticket.number} found for finding.  Checking it's up to date...`
