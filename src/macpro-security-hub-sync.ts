@@ -3,7 +3,6 @@ import {
   GetFindingsCommand,
 } from "@aws-sdk/client-securityhub";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { Octokit } from "octokit";
 import _ from "lodash";
 const findingTitleRegex = /(?<=\nFinding Title: ).*/g;
 
@@ -18,7 +17,6 @@ interface Finding {
 export class SecurityHubJiraSync {
   severity: string[];
   octokitRepoParams: { owner: string; repo: string };
-  octokit: Octokit;
   region: string;
   accountNickname?: string;
   constructor(options: {
@@ -29,11 +27,6 @@ export class SecurityHubJiraSync {
     accountNickname?: string;
   }) {
     this.severity = options.severity || ["MEDIUM", "HIGH", "CRITICAL"]; // TODO: remove MEDIUM when finished with dev.
-    this.octokitRepoParams = {
-      owner: options.repository.split("/")[0],
-      repo: options.repository.split("/")[1],
-    };
-    this.octokit = new Octokit({ auth: options.auth });
     this.region = options.region || "us-east-1";
     this.accountNickname = options.accountNickname;
   }
