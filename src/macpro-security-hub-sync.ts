@@ -285,15 +285,15 @@ ${finding.Recommendation.Text}
         if (finding.Title == issueTitle) {
           hit = true;
           console.log(
-            `Finding ${finding.Title}:  Issue ${issue.number} found for finding.  Checking it's up to date...`
+            `Finding ${finding.Title}:  Ticket ${ticket.number} found for finding.  Checking it's up to date...`
           );
-          await this.updateTicketIfItsDrifted(finding, issue);
+          await this.updateTicketIfItsDrifted(finding, ticket);
           break;
         }
       }
       if (!hit) {
         console.log(
-          `Finding ${finding.Title}:  No issue found for finding.  Creating issue...`
+          `Finding ${finding.Title}:  No ticket found for finding.  Creating ticket...`
         );
         await this.createNewJiraTicket(finding);
       }
