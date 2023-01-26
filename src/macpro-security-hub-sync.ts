@@ -245,7 +245,10 @@ ${finding.Recommendation.Text}
     );
 
     // Store all finding ids in an array
-    var findingsTitles = _.map(findings, "Title");
+    const findingsTitles = findings.map((finding) => finding.Title);
+
+    console.log("findingsTitles:", findingsTitles);
+
     // Search for open tickets that do not have a corresponding active SH finding.
     for (let i = 0; i < tickets.length; i++) {
       const ticket = tickets[i];
