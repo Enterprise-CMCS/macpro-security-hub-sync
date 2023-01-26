@@ -134,17 +134,18 @@ export class SecurityHubJiraSync {
   }
 
   async getAllTickets() {
-    let tickets = [];
-    for await (const response of this.octokit.paginate.iterator(
-      this.octokit.rest.tickets.listForRepo,
-      {
-        ...this.octokitRepoParams,
-        state: "all",
-        labels: ["security-hub", this.region, this.accountNickname],
-      }
-    )) {
-      tickets.push(...response.data);
-    }
+    let tickets: never[] = [];
+    // TODO: update this GitHub logic to Jira logic
+    // for await (const response of this.octokit.paginate.iterator(
+    //   this.octokit.rest.tickets.listForRepo,
+    //   {
+    //     ...this.octokitRepoParams,
+    //     state: "all",
+    //     labels: ["security-hub", this.region, this.accountNickname],
+    //   }
+    // )) {
+    //   tickets.push(...response.data);
+    // }
     return tickets;
   }
 
