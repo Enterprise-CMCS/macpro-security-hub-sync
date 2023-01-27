@@ -5,7 +5,7 @@
     "access": "public"
   },
   "version": "1.0.4",
-  "description": "NPM module to create Jira tickets for all findings in Security Hub for the current AWS account..",
+  "description": "NPM module to create Jira issues for all findings in Security Hub for the current AWS account..",
   "main": "./dist/index.js",
   "typings": "./dist/index.js",
   "scripts": {
@@ -27,10 +27,11 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-iam": "^3.259.0",
     "@aws-sdk/client-securityhub": "^3.257.0",
-    "@aws-sdk/client-sts": "^3.257.0",
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
+    "@types/jira-client": "^7.1.6",
     "@types/node": "^18.11.18",
     "@vitest/coverage-c8": "^0.28.2",
     "@vitest/ui": "^0.28.2",
@@ -61,5 +62,9 @@
         }
       ]
     ]
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "jira-client": "^8.2.2"
   }
 }

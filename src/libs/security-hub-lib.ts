@@ -79,3 +79,19 @@ export class SecurityHub {
     }
   }
 }
+
+// TODO: Should I narrow this down the most imporartant fields?  Is there a point to that?
+// fields to consider:
+// "Id"
+// "ProductArn"
+// "GeneratorId"
+// "AwsAccountId"
+// "Types"
+// "CreatedAt"
+// "UpdatedAt"
+// "Severity"
+// "Title"
+// "Description"
+// "Recommendation"
+// "Attributes"
+// "Region"
