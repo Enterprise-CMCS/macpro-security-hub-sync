@@ -1,3 +1,4 @@
+import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
   GetFindingsCommand,
@@ -18,6 +19,20 @@ export class SecurityHub {
     this.region = region;
     this.severities = severities;
   }
+
+  private async getAccountAlias() {
+    try {
+      const stsClient = new IAMClient({ region: this.region });
+      const aliases = (await stsClient.send(new ListAccountAliasesCommand({})))
+        .AccountAliases;
+      if (aliases && aliases[0]) return aliases[0];
+      else return "";
+    } catch (e) {
+      reportError(e);
+      return "";
+    }
+  }
+
   async getAllActiveFindings() {
     try {
       const client = new SecurityHubClient({ region: this.region });
