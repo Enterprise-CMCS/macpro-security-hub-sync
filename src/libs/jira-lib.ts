@@ -1,31 +1,43 @@
+import JiraClient, { IssueObject } from "jira-client";
+import * as dotenv from "dotenv";
 
+dotenv.config();
 
-// const issues = await this.jira.getIssuesForEpic("none");
+export class Jira {
+  jira = new JiraClient({
+    protocol: "https",
+    host: process.env.JIRA_HOST!,
+    port: "443",
+    username: process.env.JIRA_USERNAME,
+    password: process.env.JIRA_TOKEN,
+    apiVersion: "2",
+    strictSSL: true,
+  });
 
-// console.log("issues:", issues);
+  // const issues = await this.jira.getIssuesForEpic("none");
+  // console.log("issues:", issues);
 
-// interface Issue {
-//   labels: any[];
-//   title: string;
-//   state: string;
-//   body: string;
-//   number: any;
-// }
+  async getAllIssuesInProject(projectKey: string): Promise<IssueObject[]> {
+    // TODO: do we need to paginate?
+    // TODO: How can we filter for security hub items?  Labels?
+    // TODO: What will be the unique ID for a finding over its lifetime?
+    // TODO: limit to open tickets?
 
-//updateJiraIssue
-//     // TODO: update this GitHub logic to Jira logic
-//     // await this.octokit.rest.issues.update({
-//     //   ...this.octokitRepoParams,
-//     //   ...issueParams,
-//     //   issue_number: issue.number,
-//     // });
+    // filter for open tickets
+    const results = await this.jira.searchJira(
+      `project = ${projectKey} and status = "Open"`
+    );
+    return results.issues;
+  }
 
-// createJiraIssue
-//   // TODO: update this GitHub logic to Jira logic
-//   // await this.octokit.rest.issues.create({
-//   //   ...this.octokitRepoParams,
-//   //   ...this.issueParamsForFinding(finding),
-//   // });
-//   // Due to github secondary rate limiting, we will take a 5s pause after creating issues.
-//   // See: https://docs.github.com/en/rest/overview/resources-in-the-rest-api#secondary-rate-limits
-//   await new Promise((resolve) => setTimeout(resolve, 5000));
+  async createNewIssue(issue: IssueObject): Promise<IssueObject> {
+    try {
+      console.log("TODO: create Jira issue.");
+      console.log("issue:", issue);
+      return await this.jira.addNewIssue(issue);
+    } catch (e) {
+      console.error("Error creating new issue:", e);
+      throw e;
+    }
+  }
+}
