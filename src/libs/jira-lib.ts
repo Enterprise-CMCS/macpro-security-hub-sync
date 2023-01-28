@@ -24,9 +24,8 @@ export class Jira {
     // TODO: limit to open tickets?
 
     // filter for open tickets
-    const results = await this.jira.searchJira(
-      `project = ${projectKey} and status = "Open"`
-    );
+    let query = `${projectKey} and status = "Open"`;
+    const results = await this.jira.searchJira(query);
     return results.issues;
   }
 
@@ -34,6 +33,7 @@ export class Jira {
     try {
       console.log("TODO: create Jira issue.");
       console.log("issue:", issue);
+      console.log("Creating Jira issue.");
       return await this.jira.addNewIssue(issue);
     } catch (e) {
       console.error("Error creating new issue:", e);
