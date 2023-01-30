@@ -9,8 +9,6 @@ export class SecurityHubJiraSync {
   private readonly jira = new Jira();
   private readonly securityHub = new SecurityHub();
 
-  constructor(options: { severity?: string[]; region?: string }) {}
-
   async sync() {
     // 1. Get all Security Hub issues from Jira for this AWS Account
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
