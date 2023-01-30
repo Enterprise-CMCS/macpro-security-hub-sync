@@ -39,72 +39,52 @@ export class SecurityHubJiraSync {
 
   createIssueBody(finding: FindingWithAccountAlias) {
     const {
-      Remediation,
-      Title,
-      Description,
-      Id,
-      GeneratorId,
-      AwsAccountId,
-      accountAlias,
-      Types,
-      Severity,
+      Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
+      Title = "",
+      Description = "",
+      accountAlias = "",
+      AwsAccountId = "",
+      Severity: { Label: severity } = {},
+      ProductFields: { StandardsControlArn = "" } = {},
     } = finding;
-    const { Label: severity = "" } = finding.Severity || {};
 
-    const remediation = Remediation || {
-      Recommendation: {},
-    };
-    const { Recommendation = {} } = remediation;
-    const { Url = "", Text = "" } = Recommendation;
-    const {
-      ControlId = "",
-      StandardsControlArn = "",
-      "aws/securityhub/FindingId": findingId = "",
-    } = finding.ProductFields || {};
+    return `----
 
-    return (
-      "----\n" +
-      "\n" +
-      "*This issue was generated from Security Hub data and is managed through automation.*\n" +
-      "Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.\n" +
-      `Finding Title: ${Title}\n` +
-      "\n" +
-      "----\n" +
-      "\n" +
-      "h2. Type of Issue:\n" +
-      "\n" +
-      "* Security Hub Finding\n" +
-      "\n" +
-      "h2. Title:\n" +
-      "\n" +
-      Title +
-      "\n" +
-      "h2. Description:\n" +
-      "\n" +
-      Description +
-      "\n" +
-      "\n" +
-      "h2. Remediation:\n" +
-      "\n" +
-      Url +
-      "\n" +
-      Text +
-      "\n" +
-      "\n" +
-      "h2. AWS Account:\n" +
-      `${AwsAccountId} (${accountAlias})\n` +
-      "\n\n" +
-      "Severity:\n" +
-      `${severity}\n` +
-      "\n" +
-      "h2. SecurityHubFindingUrl:\n" +
-      `${this.createSecurityHubFindingUrl(StandardsControlArn)}\n` +
-      "\n" +
-      "\n" +
-      "h2. AC:\n" +
-      "\n" +
-      "* All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this ticket will automatically close when the AC is met.)"
-    );
+      *This issue was generated from Security Hub data and is managed through automation.*
+      Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.
+      Finding Title: ${Title}
+
+      ----
+
+      h2. Type of Issue:
+
+      * Security Hub Finding
+
+      h2. Title:
+
+      ${Title}
+
+      h2. Description:
+
+      ${Description}
+
+      h2. Remediation:
+
+      ${Url}
+      ${Text}
+
+      h2. AWS Account:
+      ${AwsAccountId} (${accountAlias})
+
+      h2. Severity:
+      ${severity}
+
+      h2. SecurityHubFindingUrl:
+      ${this.createSecurityHubFindingUrl(StandardsControlArn)}
+
+      h2. AC:
+
+      * All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this ticket will automatically close when the AC is met.)`;
   }
 
   createSecurityHubFindingUrl(standardsControlArn = "") {
