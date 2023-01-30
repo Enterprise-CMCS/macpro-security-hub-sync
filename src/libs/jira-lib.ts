@@ -17,16 +17,23 @@ export class Jira {
   // const issues = await this.jira.getIssuesForEpic("none");
   // console.log("issues:", issues);
 
-  async getAllIssuesInProject(projectKey: string): Promise<IssueObject[]> {
-    // TODO: do we need to paginate?
-    // TODO: How can we filter for security hub items?  Labels?
-    // TODO: What will be the unique ID for a finding over its lifetime?
-    // TODO: limit to open tickets?
+  async getAllSecurityHubIssuesInJiraProject(
+    projectKey: string
+  ): Promise<IssueObject[]> {
+    const searchOptions: JiraClient.SearchQuery = {};
+    const query = `project = ${projectKey} AND labels = security-hub`;
+    let totalIssuesReceived = 0;
+    let allIssues: IssueObject[] = [];
+    let results: JiraClient.JsonResponse;
 
-    // filter for open tickets
-    let query = `${projectKey} and status = "Open"`;
-    const results = await this.jira.searchJira(query);
-    return results.issues;
+    do {
+      results = await this.jira.searchJira(query, searchOptions);
+      allIssues = allIssues.concat(results.issues);
+      totalIssuesReceived += results.issues.length;
+      searchOptions.startAt = totalIssuesReceived;
+    } while (totalIssuesReceived < results.total);
+
+    return allIssues;
   }
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
