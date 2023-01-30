@@ -1,9 +1,4 @@
-import {
-  reportError,
-  Jira,
-  SecurityHub,
-  FindingWithAccountAlias,
-} from "./libs";
+import { Jira, SecurityHub, FindingWithAccountAlias } from "./libs";
 
 export class SecurityHubJiraSync {
   private readonly jira = new Jira();
@@ -26,12 +21,10 @@ export class SecurityHubJiraSync {
     const shFindings: FindingWithAccountAlias[] =
       await this.securityHub.getAllActiveFindings();
 
-    [
-      // 3. Close existing Jira issues if their finding is no longer active/current
+    // 3. Close existing Jira issues if their finding is no longer active/current
 
-      // 4. Create Jira issue for current findings that do not already have a Jira issue
-      shFindings[0],
-    ].map((finding) => {
+    // 4. Create Jira issue for current findings that do not already have a Jira issue
+    [shFindings[0]].map((finding) => {
       console.log("finding:", JSON.stringify(finding, null, 2));
       this.createJiraIssueFromFinding(finding);
     });
@@ -107,6 +100,7 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
+  // TODO: refine this as implementing #4 in sync.
   async createJiraIssueFromFinding(finding: FindingWithAccountAlias) {
     const { Label: severity = "" } = finding.Severity || {};
 
@@ -130,12 +124,10 @@ export class SecurityHubJiraSync {
 }
 
 async function testing() {
-  const mySync = new SecurityHubJiraSync({
+  await new SecurityHubJiraSync({
     // region: "us-east-1",
     // severities: ["HIGH"],
-  });
-
-  await mySync.sync();
+  }).sync();
 }
 
 testing();
