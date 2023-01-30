@@ -8,9 +8,14 @@ import {
 } from "@aws-sdk/client-securityhub";
 import { reportError } from "./error-lib";
 
+export interface FindingWithAccountAlias extends AwsSecurityFinding {
+  accountAlias: string;
+}
+
 export class SecurityHub {
   private readonly region: string;
   private readonly severities: string[];
+  private accountAlias: string = "";
 
   constructor({
     region = "us-east-1",
@@ -18,19 +23,16 @@ export class SecurityHub {
   } = {}) {
     this.region = region;
     this.severities = severities;
+    this.getAccountAlias().catch((e) => reportError(e));
   }
 
   private async getAccountAlias() {
-    try {
-      const stsClient = new IAMClient({ region: this.region });
-      const aliases = (await stsClient.send(new ListAccountAliasesCommand({})))
-        .AccountAliases;
-      if (aliases && aliases[0]) return aliases[0];
-      else return "";
-    } catch (e) {
-      reportError(e);
-      return "";
-    }
+    const stsClient = new IAMClient({ region: this.region });
+    const { AccountAliases } = await stsClient.send(
+      new ListAccountAliasesCommand({})
+    );
+    this.accountAlias =
+      AccountAliases && AccountAliases[0] ? AccountAliases[0] : "";
   }
 
   async getAllActiveFindings() {
@@ -72,26 +74,12 @@ export class SecurityHub {
         nextToken = response.NextToken;
       } while (nextToken);
 
-      return Array.from(uniqueFindings);
+      return Array.from(uniqueFindings).map((finding) => {
+        return { accountAlias: this.accountAlias, ...finding };
+      });
     } catch (e) {
       reportError(e);
       return [];
     }
   }
 }
-
-// TODO: Should I narrow this down the most imporartant fields?  Is there a point to that?
-// fields to consider:
-// "Id"
-// "ProductArn"
-// "GeneratorId"
-// "AwsAccountId"
-// "Types"
-// "CreatedAt"
-// "UpdatedAt"
-// "Severity"
-// "Title"
-// "Description"
-// "Recommendation"
-// "Attributes"
-// "Region"
