@@ -7,7 +7,14 @@ import {
 
 export class SecurityHubJiraSync {
   private readonly jira = new Jira();
-  private readonly securityHub = new SecurityHub();
+  private readonly securityHub;
+
+  constructor({
+    region = "us-east-1",
+    severities = ["HIGH", "CRITICAL"],
+  } = {}) {
+    this.securityHub = new SecurityHub({ region, severities });
+  }
 
   async sync() {
     // 1. Get all Security Hub issues from Jira for this AWS Account
@@ -31,77 +38,87 @@ export class SecurityHubJiraSync {
   }
 
   createIssueBody(finding: FindingWithAccountAlias) {
-    const remediation = finding.Remediation ?? {
-      Recommendation: { Url: "", Text: "" },
+    const {
+      Remediation,
+      Title,
+      Description,
+      Id,
+      GeneratorId,
+      AwsAccountId,
+      accountAlias,
+      Types,
+      Severity,
+    } = finding;
+
+    const remediation = Remediation || {
+      Recommendation: {},
     };
-    const recommendation = remediation.Recommendation ?? {};
-    delete finding.ProductFields;
-    const productFields = finding.ProductFields ?? {
-      ControlId: "",
-      StandardsControlArn: "",
-      "aws/securityhub/FindingId": "",
-    };
+    const { Recommendation = {} } = remediation;
+    const { Url = "", Text = "" } = Recommendation;
+    const {
+      ControlId = "",
+      StandardsControlArn = "",
+      "aws/securityhub/FindingId": findingId = "",
+    } = finding.ProductFields || {};
 
-    return (
-      `
-**************************************************************
-__This issue was generated from Security Hub data and is managed through automation.__
-Please do not edit the title or body of this issue, or remove the security-hub label.  All other edits/comments are welcome.
-Finding Title: ${finding.Title}
-**************************************************************
+    return `
+      **************************************************************
+      __This issue was generated from Security Hub data and is managed through automation.__
+      Please do not edit the title or body of this issue, or remove the security-hub label.  All other edits/comments are welcome.
+      Finding Title: ${Title}
+      **************************************************************
 
-## Type of Issue:
+      ## Type of Issue:
 
-- [x] Security Hub Finding
+      - [x] Security Hub Finding
 
-## Id:
+      ## Id:
 
-${finding.Id}
+      ${Id}
 
-## GeneratorId:
+      ## GeneratorId:
 
-${finding.GeneratorId}
+      ${GeneratorId}
 
-## Title:
+      ## Title:
 
-${finding.Title}
+      ${Title}
 
-## Description
+      ## Description
 
-${finding.Description}
+      ${Description}
 
-## Remediation
+      ## Remediation
 
-${recommendation.Url}
-${recommendation.Text}
+      ${Url}
+      ${Text}
 
-## AC:
+      ## AC:
 
-- All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this issue will automatically close when the AC is met.)\n` +
-      `AwsAccountId: ${finding.AwsAccountId}\n` +
-      `AwsAccountAlias: ${finding.accountAlias}\n` +
-      `Types: ${finding.Types}\n` +
-      `Severity: ${JSON.stringify(finding.Severity)}\n` +
-      `ControlId: ${productFields.ControlId}\n` +
-      `StandardsControlArn: ${productFields.StandardsControlArn}\n` +
-      `ProductFields: ${productFields["aws/securityhub/FindingId"]}\n` +
-      `AwsAccountId: ${finding.AwsAccountId}\n` +
-      `SecurityHubFindingUrl: ${this.createSecurityHubFindingUrl(
-        productFields.StandardsControlArn
-      )}\n`
-    );
+      - All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this issue will automatically close when the AC is met.)\n
+      AwsAccountId: ${AwsAccountId}\n
+      AwsAccountAlias: ${accountAlias}\n
+      Types: ${Types}\n
+      Severity: ${JSON.stringify(Severity)}\n
+      ControlId: ${ControlId}\n
+      StandardsControlArn: ${StandardsControlArn}\n
+      FindingId: ${findingId}\n`;
   }
 
-  createSecurityHubFindingUrl(standardsControlArn: string) {
+  createSecurityHubFindingUrl(standardsControlArn = "") {
+    if (!standardsControlArn) {
+      return "";
+    }
+
     const [
-      _arn,
+      ,
       partition,
-      _securityhub,
+      ,
       region,
-      _accountId,
-      _control,
+      ,
+      ,
       securityStandards,
-      _v,
+      ,
       securityStandardsVersion,
       controlId,
     ] = standardsControlArn.split(/[/:]+/);
@@ -109,26 +126,19 @@ ${recommendation.Text}
   }
 
   async createJiraIssueFromFinding(finding: FindingWithAccountAlias) {
-    const title = "New issue from jira-client";
-    const description = "";
-    const recommendationText = "";
-    const recommendationUrl = "";
-    const severity = finding.Severity ?? { Label: "" };
+    const title = "New issue from jira-client"; // TODO
+    const { Label: severity = "" } = finding.Severity || {};
 
     const newIssueData = {
       fields: {
-        project: {
-          key: "TEST",
-        },
-        summary: `SecurityHub Finding - ${title}`,
+        project: { key: "TEST" },
+        summary: `SecurityHub Finding - ${finding.Title}`,
         description: this.createIssueBody(finding),
-        issuetype: {
-          name: "Task",
-        },
+        issuetype: { name: "Task" },
         labels: [
           "security-hub",
           finding.Region,
-          severity.Label,
+          severity,
           finding.accountAlias,
         ],
       },
@@ -140,8 +150,8 @@ ${recommendation.Text}
 
 async function testing() {
   const mySync = new SecurityHubJiraSync({
-    region: "us-east-1",
-    severity: ["CRITICAL"],
+    // region: "us-east-1",
+    // severities: ["HIGH"],
   });
 
   await mySync.sync();
