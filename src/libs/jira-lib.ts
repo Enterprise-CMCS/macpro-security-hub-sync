@@ -4,18 +4,30 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 export class Jira {
-  jira = new JiraClient({
-    protocol: "https",
-    host: process.env.JIRA_HOST!,
-    port: "443",
-    username: process.env.JIRA_USERNAME,
-    password: process.env.JIRA_TOKEN,
-    apiVersion: "2",
-    strictSSL: true,
-  });
+  jira;
 
-  // const issues = await this.jira.getIssuesForEpic("none");
-  // console.log("issues:", issues);
+  constructor() {
+    const requiredEnvVars = ["JIRA_HOST", "JIRA_USERNAME", "JIRA_TOKEN"];
+    let missingEnvVars: string[] = [];
+    requiredEnvVars.forEach((envVar) => {
+      if (!process.env[envVar]) missingEnvVars.push(envVar);
+    });
+    if (missingEnvVars.length) {
+      throw new Error(
+        `required environment variables are not set ${missingEnvVars}`
+      );
+    }
+
+    this.jira = new JiraClient({
+      protocol: "https",
+      host: process.env.JIRA_HOST!,
+      port: "443",
+      username: process.env.JIRA_USERNAME,
+      password: process.env.JIRA_TOKEN,
+      apiVersion: "2",
+      strictSSL: true,
+    });
+  }
 
   async getAllSecurityHubIssuesInJiraProject(
     projectKey: string
@@ -41,7 +53,12 @@ export class Jira {
       console.log("TODO: create Jira issue.");
       console.log("issue:", issue);
       console.log("Creating Jira issue.");
-      return await this.jira.addNewIssue(issue);
+
+      const response = await this.jira.addNewIssue(issue);
+      response[
+        "webUrl"
+      ] = `https://jonholman.atlassian.net/browse/${response.key}`;
+      return response;
     } catch (e) {
       console.error("Error creating new issue:", e);
       throw e;
