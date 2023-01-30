@@ -49,6 +49,7 @@ export class SecurityHubJiraSync {
       Types,
       Severity,
     } = finding;
+    const { Label: severity = "" } = finding.Severity || {};
 
     const remediation = Remediation || {
       Recommendation: {},
@@ -61,48 +62,49 @@ export class SecurityHubJiraSync {
       "aws/securityhub/FindingId": findingId = "",
     } = finding.ProductFields || {};
 
-    return `
-      **************************************************************
-      __This issue was generated from Security Hub data and is managed through automation.__
-      Please do not edit the title or body of this issue, or remove the security-hub label.  All other edits/comments are welcome.
-      Finding Title: ${Title}
-      **************************************************************
-
-      ## Type of Issue:
-
-      - [x] Security Hub Finding
-
-      ## Id:
-
-      ${Id}
-
-      ## GeneratorId:
-
-      ${GeneratorId}
-
-      ## Title:
-
-      ${Title}
-
-      ## Description
-
-      ${Description}
-
-      ## Remediation
-
-      ${Url}
-      ${Text}
-
-      ## AC:
-
-      - All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this issue will automatically close when the AC is met.)\n
-      AwsAccountId: ${AwsAccountId}\n
-      AwsAccountAlias: ${accountAlias}\n
-      Types: ${Types}\n
-      Severity: ${JSON.stringify(Severity)}\n
-      ControlId: ${ControlId}\n
-      StandardsControlArn: ${StandardsControlArn}\n
-      FindingId: ${findingId}\n`;
+    return (
+      "----\n" +
+      "\n" +
+      "*This issue was generated from Security Hub data and is managed through automation.*\n" +
+      "Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.\n" +
+      `Finding Title: ${Title}\n` +
+      "\n" +
+      "----\n" +
+      "\n" +
+      "h2. Type of Issue:\n" +
+      "\n" +
+      "* Security Hub Finding\n" +
+      "\n" +
+      "h2. Title:\n" +
+      "\n" +
+      Title +
+      "\n" +
+      "h2. Description:\n" +
+      "\n" +
+      Description +
+      "\n" +
+      "\n" +
+      "h2. Remediation:\n" +
+      "\n" +
+      Url +
+      "\n" +
+      Text +
+      "\n" +
+      "\n" +
+      "h2. AWS Account:\n" +
+      `${AwsAccountId} (${accountAlias})\n` +
+      "\n\n" +
+      "Severity:\n" +
+      `${severity}\n` +
+      "\n" +
+      "h2. SecurityHubFindingUrl:\n" +
+      `${this.createSecurityHubFindingUrl(StandardsControlArn)}\n` +
+      "\n" +
+      "\n" +
+      "h2. AC:\n" +
+      "\n" +
+      "* All findings of this type are resolved or suppressed, indicated by a Workflow Status of Resolved or Suppressed.  (Note:  this ticket will automatically close when the AC is met.)"
+    );
   }
 
   createSecurityHubFindingUrl(standardsControlArn = "") {
@@ -126,7 +128,6 @@ export class SecurityHubJiraSync {
   }
 
   async createJiraIssueFromFinding(finding: FindingWithAccountAlias) {
-    const title = "New issue from jira-client"; // TODO
     const { Label: severity = "" } = finding.Severity || {};
 
     const newIssueData = {
