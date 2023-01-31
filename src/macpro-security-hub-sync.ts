@@ -19,7 +19,7 @@ export class SecurityHubJiraSync {
   }
 
   async sync() {
-    // Step 1. Get all open Security Hub issues from Jira for this AWS Account
+    // Step 1. Get all open Security Hub issues from Jira
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject();
 
     // console.log(
@@ -27,7 +27,7 @@ export class SecurityHubJiraSync {
     //   new Set(jiraIssues.map((i) => i.fields.status.name))
     // );
 
-    // Step 2. Get all current findings from Security Hub in this AWS account
+    // Step 2. Get all current findings from Security Hub
     const shFindings = await this.securityHub.getAllActiveFindings();
 
     // Step 3. Close existing Jira issues if their finding is no longer active/current
