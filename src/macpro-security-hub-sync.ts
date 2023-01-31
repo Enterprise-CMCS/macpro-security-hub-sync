@@ -53,21 +53,21 @@ export class SecurityHubJiraSync {
 
   closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
-    shFindings: FindingWithAccountAlias[]
+    shFindings: OurFindingType[]
   ) {
     const expectedJiraIssueTitles = Array.from(
       new Set(
-        shFindings.map((finding) => `SecurityHub Finding - ${finding.Title}`)
+        shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`)
       )
     );
 
     // close all security-hub labeled Jira issues that do not have an active finding
     jiraIssues
       .filter((issue) =>
-        this.jira_open_statuses.includes(issue.fields.status.name)
+        this.jiraOpenStatuses.includes(issue.fields.status.name)
       )
-      .map((issue) => {
-        if (!expectedJiraIssueTitles.includes(issue.fields.summary))
+      .forEach((issue) => {
+        if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
           this.jira.closeIssue(issue.key);
         }
       });
