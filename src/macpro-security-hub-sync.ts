@@ -93,7 +93,7 @@ export class SecurityHubJiraSync {
       });
   }
 
-  createIssueBody(finding: FindingWithAccountAliasPartial) {
+  createIssueBody(finding: OurFindingType) {
     const {
       Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
       title = "",
@@ -163,7 +163,7 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  async createJiraIssueFromFinding(finding: FindingWithAccountAliasPartial) {
+  async createJiraIssueFromFinding(finding: OurFindingType) {
     const newIssueData = {
       fields: {
         project: { key: this.jiraProjectName },
