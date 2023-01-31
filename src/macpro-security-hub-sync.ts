@@ -107,7 +107,7 @@ export class SecurityHubJiraSync {
 
       *This issue was generated from Security Hub data and is managed through automation.*
       Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.
-      Finding Title: ${Title}
+      Finding Title: ${title}
 
       ----
 
@@ -117,7 +117,7 @@ export class SecurityHubJiraSync {
 
       h2. Title:
 
-      ${Title}
+      ${title}
 
       h2. Description:
 
