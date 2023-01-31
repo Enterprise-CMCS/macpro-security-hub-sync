@@ -77,8 +77,8 @@ export class SecurityHub {
       return Array.from(uniqueFindings).map((finding) => {
         return { accountAlias: this.accountAlias, ...finding };
       });
-    } catch (e) {
-      reportError(e);
+    } catch (error) {
+      Logger.logError(error as Error);
       return [];
     }
   }
