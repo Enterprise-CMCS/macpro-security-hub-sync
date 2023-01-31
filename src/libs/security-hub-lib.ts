@@ -2,11 +2,10 @@ import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
   GetFindingsCommand,
-  AwsSecurityFindingFilters,
-  AwsSecurityFinding,
-  GetFindingsResponse,
+  GetFindingsCommandOutput,
+  Remediation,
 } from "@aws-sdk/client-securityhub";
-import { reportError } from "./error-lib";
+import { Logger } from "./error-lib";
 
 export interface FindingWithAccountAlias extends AwsSecurityFinding {
   accountAlias: string;
