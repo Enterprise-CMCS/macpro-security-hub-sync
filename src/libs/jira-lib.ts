@@ -26,6 +26,25 @@ export class Jira {
     });
   }
 
+  private static checkEnvVars(): void {
+    const requiredEnvVars = [
+      "JIRA_HOST",
+      "JIRA_USERNAME",
+      "JIRA_TOKEN",
+      "JIRA_DOMAIN",
+      "JIRA_PROJECT",
+    ];
+    const missingEnvVars = requiredEnvVars.filter(
+      (envVar) => !process.env[envVar]
+    );
+
+    if (missingEnvVars.length) {
+      throw new Error(
+        `Missing required environment variables: ${missingEnvVars.join(", ")}`
+      );
+    }
+  }
+
   async getAllSecurityHubIssuesInJiraProject(): Promise<IssueObject[]> {
     console.log("process.env.JIRA_PROJECT:", process.env.JIRA_PROJECT);
     const searchOptions: JiraClient.SearchQuery = {};
@@ -89,25 +108,6 @@ export class Jira {
     } catch (error) {
       console.error(
         `Failed to transition issue ${issueKey} to "Done": ${error}`
-      );
-    }
-  }
-
-  private static checkEnvVars(): void {
-    const requiredEnvVars = [
-      "JIRA_HOST",
-      "JIRA_USERNAME",
-      "JIRA_TOKEN",
-      "JIRA_DOMAIN",
-      "JIRA_PROJECT",
-    ];
-    const missingEnvVars = requiredEnvVars.filter(
-      (envVar) => !process.env[envVar]
-    );
-
-    if (missingEnvVars.length) {
-      throw new Error(
-        `Missing required environment variables: ${missingEnvVars.join(", ")}`
       );
     }
   }
