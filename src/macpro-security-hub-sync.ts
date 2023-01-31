@@ -25,8 +25,10 @@ export class SecurityHubJiraSync {
       "In Progress",
     ];
     this.jira_project_name = jira_project_name;
+    this.jiraProjectName = jiraProjectName;
     this.securityHub = new SecurityHub({ region, severities });
-    this.jira_open_statuses = jira_open_statuses;
+    this.jiraOpenStatuses = jiraOpenStatuses;
+    this.jira = new Jira();
   }
 
   async sync() {
