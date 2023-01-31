@@ -1,44 +1,118 @@
 import { Jira, SecurityHub, FindingWithAccountAlias } from "./libs";
+import { Remediation } from "@aws-sdk/client-securityhub";
+import { IssueObject } from "jira-client";
+
+interface FindingWithAccountAliasPartial {
+  Title?: string;
+  Region?: string;
+  accountAlias?: string;
+  AwsAccountId?: string;
+  Severity?: string;
+  Description?: string;
+  StandardsControlArn?: string;
+  Remediation?: Remediation;
+}
 
 export class SecurityHubJiraSync {
   private readonly jira = new Jira();
   private readonly securityHub;
+  private readonly jira_open_statuses: string[];
+  private readonly jira_project_name: string;
 
-  constructor({
-    region = "us-east-1",
-    severities = ["HIGH", "CRITICAL"],
-  } = {}) {
+  constructor(
+    jira_project_name: string,
+    options: Partial<{
+      region: string;
+      severities: string[];
+      jira_open_statuses: string[];
+    }> = {}
+  ) {
+    const region = options.region || "us-east-1";
+    const severities = options.severities || ["HIGH", "CRITICAL"];
+    const jira_open_statuses = options.jira_open_statuses || [
+      "To Do",
+      "In Progress",
+    ];
+    this.jira_project_name = jira_project_name;
     this.securityHub = new SecurityHub({ region, severities });
+    this.jira_open_statuses = jira_open_statuses;
   }
 
   async sync() {
-    // 1. Get all Security Hub issues from Jira for this AWS Account
-    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
-      "TEST"
+    // Step 1. Get all Security Hub issues from Jira for this AWS Account, and for now filter to open statuses (TODO: discuss with the team)
+    const jiraIssues = (
+      await this.jira.getAllSecurityHubIssuesInJiraProject(
+        this.jira_project_name
+      )
+    ).filter((issue) =>
+      this.jira_open_statuses.includes(issue.fields.status.name)
     );
 
-    // 2. Get all current findings from Security Hub in this AWS account
+    // console.log(
+    //   "all current statuses on security hub issues:",
+    //   new Set(jiraIssues.map((i) => i.fields.status.name))
+    // );
+
+    // Step 2. Get all current findings from Security Hub in this AWS account
     const shFindings: FindingWithAccountAlias[] =
       await this.securityHub.getAllActiveFindings();
 
-    // 3. Close existing Jira issues if their finding is no longer active/current
+    // Step 3. Close existing Jira issues if their finding is no longer active/current
+    this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
 
-    // 4. Create Jira issue for current findings that do not already have a Jira issue
-    [shFindings[0]].map((finding) => {
-      console.log("finding:", JSON.stringify(finding, null, 2));
-      this.createJiraIssueFromFinding(finding);
-    });
+    // Step 4. Create Jira issue for current findings that do not already have a Jira issue
+    const existingJiraIssueTitles = Array.from(
+      new Set(jiraIssues.map((i) => i.fields.summary))
+    );
+
+    const uniqueSecurityHubFindings = [
+      ...new Set(
+        shFindings.map((finding) =>
+          JSON.stringify(this.extractDesiredFieldsFromFinding(finding))
+        )
+      ),
+    ].map((finding) => JSON.parse(finding));
+
+    uniqueSecurityHubFindings
+      .filter(
+        (finding) =>
+          !existingJiraIssueTitles.includes(
+            "SecurityHub Finding - " + finding.Title
+          )
+      )
+      .map((finding) => this.createJiraIssueFromFinding(finding));
   }
 
-  createIssueBody(finding: FindingWithAccountAlias) {
+  closeIssuesForResolvedFindings(
+    jiraIssues: IssueObject[],
+    shFindings: FindingWithAccountAlias[]
+  ) {
+    const expectedJiraIssueTitles = Array.from(
+      new Set(
+        shFindings.map((finding) => `SecurityHub Finding - ${finding.Title}`)
+      )
+    );
+
+    // close all security-hub labeled Jira issues that do not have an active finding
+    jiraIssues
+      .filter((issue) =>
+        this.jira_open_statuses.includes(issue.fields.status.name)
+      )
+      .map((issue) => {
+        if (!expectedJiraIssueTitles.includes(issue.fields.summary))
+          this.jira.closeIssue(issue.key);
+      });
+  }
+
+  createIssueBody(finding: FindingWithAccountAliasPartial) {
     const {
       Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
       Title = "",
       Description = "",
       accountAlias = "",
       AwsAccountId = "",
-      Severity: { Label: severity } = {},
-      ProductFields: { StandardsControlArn = "" } = {},
+      Severity = "",
+      StandardsControlArn = "",
     } = finding;
 
     return `----
@@ -70,7 +144,7 @@ export class SecurityHubJiraSync {
       ${AwsAccountId} (${accountAlias})
 
       h2. Severity:
-      ${severity}
+      ${Severity}
 
       h2. SecurityHubFindingUrl:
       ${this.createSecurityHubFindingUrl(StandardsControlArn)}
@@ -100,34 +174,44 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  // TODO: refine this as implementing #4 in sync.
-  async createJiraIssueFromFinding(finding: FindingWithAccountAlias) {
-    const { Label: severity = "" } = finding.Severity || {};
-
+  async createJiraIssueFromFinding(finding: FindingWithAccountAliasPartial) {
     const newIssueData = {
       fields: {
-        project: { key: "TEST" },
+        project: { key: this.jira_project_name },
         summary: `SecurityHub Finding - ${finding.Title}`,
         description: this.createIssueBody(finding),
         issuetype: { name: "Task" },
         labels: [
           "security-hub",
           finding.Region,
-          severity,
+          finding.Severity,
           finding.accountAlias,
         ],
       },
     };
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
-    console.log("newIssueInfo:", newIssueInfo);
+    console.log("new Jira issue created:", newIssueInfo);
+  }
+
+  extractDesiredFieldsFromFinding(
+    finding: FindingWithAccountAlias
+  ): FindingWithAccountAliasPartial {
+    return {
+      Title: finding.Title,
+      Region: finding.Region,
+      accountAlias: finding.accountAlias,
+      AwsAccountId: finding.AwsAccountId,
+      Severity: (finding.Severity || { Label: "" }).Label,
+      Description: finding.Description,
+      StandardsControlArn:
+        (finding.ProductFields || {}).StandardsControlArn || "",
+      Remediation: finding.Remediation,
+    };
   }
 }
 
 async function testing() {
-  await new SecurityHubJiraSync({
-    // region: "us-east-1",
-    // severities: ["HIGH"],
-  }).sync();
+  await new SecurityHubJiraSync("TES4", { severities: ["MEDIUM"] }).sync();
 }
 
 testing();
