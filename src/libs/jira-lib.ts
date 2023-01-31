@@ -50,8 +50,6 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      console.log("TODO: create Jira issue.");
-      console.log("issue:", issue);
       console.log("Creating Jira issue.");
 
       const response = await this.jira.addNewIssue(issue);
@@ -62,6 +60,32 @@ export class Jira {
     } catch (e) {
       console.error("Error creating new issue:", e);
       throw e;
+    }
+  }
+
+  async closeIssue(issueKey: string) {
+    try {
+      console.log("need to close jira issue:", issueKey);
+
+      const transitions = await this.jira.listTransitions(issueKey);
+      const doneTransition = transitions.transitions.find(
+        (t: { name: string }) => t.name === "Done"
+      );
+      const doneTransitionId = doneTransition ? doneTransition.id : undefined;
+
+      if (!doneTransition) {
+        console.error(`Cannot find "Done" transition for issue ${issueKey}`);
+        return;
+      }
+
+      await this.jira.transitionIssue(issueKey, {
+        transition: { id: doneTransition.id },
+      });
+      console.log(`Issue ${issueKey} has been transitioned to "Done"`);
+    } catch (error) {
+      console.error(
+        `Failed to transition issue ${issueKey} to "Done": ${error}`
+      );
     }
   }
 }
