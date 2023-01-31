@@ -172,14 +172,14 @@ export class SecurityHubJiraSync {
   async createJiraIssueFromFinding(finding: FindingWithAccountAliasPartial) {
     const newIssueData = {
       fields: {
-        project: { key: this.jira_project_name },
-        summary: `SecurityHub Finding - ${finding.Title}`,
+        project: { key: this.jiraProjectName },
+        summary: `SecurityHub Finding - ${finding.title}`,
         description: this.createIssueBody(finding),
         issuetype: { name: "Task" },
         labels: [
           "security-hub",
-          finding.Region,
-          finding.Severity,
+          finding.region,
+          finding.severity,
           finding.accountAlias,
         ],
       },
