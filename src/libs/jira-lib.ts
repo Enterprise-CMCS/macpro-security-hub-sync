@@ -46,7 +46,6 @@ export class Jira {
   }
 
   async getAllSecurityHubIssuesInJiraProject(): Promise<IssueObject[]> {
-    console.log("process.env.JIRA_PROJECT:", process.env.JIRA_PROJECT);
     const searchOptions: JiraClient.SearchQuery = {};
     const query = `project = ${
       process.env.JIRA_PROJECT
@@ -54,15 +53,12 @@ export class Jira {
       '","'
     )}")`;
 
-    console.log("query:", query);
-
     let totalIssuesReceived = 0;
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
 
     do {
       results = await this.jira.searchJira(query, searchOptions);
-      console.log("s:", results.issues.length);
       allIssues = allIssues.concat(results.issues);
       totalIssuesReceived += results.issues.length;
       searchOptions.startAt = totalIssuesReceived;
