@@ -11,7 +11,7 @@ export class Jira {
     Jira.checkEnvVars();
 
     this.jira = new JiraClient({
-      host: process.env.JIRA_HOST,
+      host: process.env.JIRA_HOST ?? "",
       username: process.env.JIRA_USERNAME,
       password: process.env.JIRA_TOKEN,
       apiVersion: "2",
