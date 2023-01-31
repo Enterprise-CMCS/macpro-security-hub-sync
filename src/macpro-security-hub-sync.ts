@@ -48,12 +48,11 @@ export class SecurityHubJiraSync {
     );
 
     // close all security-hub labeled Jira issues that do not have an active finding
-    jiraIssues
-      .forEach((issue) => {
-        if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
-          this.jira.closeIssue(issue.key);
-        }
-      });
+    jiraIssues.forEach((issue) => {
+      if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
+        this.jira.closeIssue(issue.key);
+      }
+    });
   }
 
   createIssueBody(finding: OurFindingType) {
