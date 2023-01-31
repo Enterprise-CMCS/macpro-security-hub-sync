@@ -15,6 +15,11 @@ export class Jira {
       ? process.env.JIRA_OPEN_STATUSES.split(",")
       : ["To Do", "In Progress"];
 
+
+    this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
+      ? process.env.JIRA_OPEN_STATUSES.split(",")
+      : ["To Do", "In Progress"];
+
     this.jira = new JiraClient({
       protocol: "https",
       host: process.env.JIRA_HOST!,
