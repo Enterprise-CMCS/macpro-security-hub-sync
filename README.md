@@ -32,6 +32,14 @@ This package syncs AWS Security Hub Findings to Jira.
 - By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
 - When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
 
+## Synchronization Process
+
+The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
+Step 1. Get all open Security Hub issues from Jira
+Step 2. Get all current findings from Security Hub
+Step 3. Close existing Jira issues if their finding is no longer active/current
+Step 4. Create Jira issue for current findings that do not already have a Jira issue
+
 ## Usage and Getting Started
 
 To install the package run the following command:
@@ -55,17 +63,7 @@ import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 With SecurityHubJiraSync imported you can now execute it like:
 
 ```
-await SecurityHubJiraSync.getAllFindings("us-east-1");
-TODO: decide between approach to run above and below.
-const mySync = new SecurityHubJiraSync({
-  repository: "myorgname/myrepositoryname", // (required) The name of the repository in which to create Issues. If GH Actions, use process.env.GITHUB_REPOSITORY
-  auth: process.env.GITHUB_TOKEN, // (required) A PAT with access to create issues. If GH Actions, use process.env.GITHUB_TOKEN
-  accountNickname: "dev", // (required) A sensible account nickname; will be used to label issues.
-  region: "us-east-1", // (optional, default: us-east-1) The SecHub region at which to look.
-  severity: ["CRITICAL","HIGH"], // (optional, default: ['CRITICAL','HIGH']) The finding types for which you want to create issues.
-});
-await mySync.sync();
-
+await new SecurityHubJiraSync({ region = "us-east-1", severities: ["MEDIUM"] }).sync();
 ```
 
 ## Contributing
