@@ -11,29 +11,22 @@ interface SecurityHubJiraSyncOptions {
 export class SecurityHubJiraSync {
   private readonly jira: Jira;
   private readonly securityHub: SecurityHub;
-  private readonly jiraOpenStatuses: string[];
-  private readonly jiraProjectName: string;
 
   constructor(
-    jiraProjectName: string,
     options: SecurityHubJiraSyncOptions = {}
   ) {
     const {
       region = "us-east-1",
       severities = ["HIGH", "CRITICAL"],
-      jiraOpenStatuses = ["To Do", "In Progress"],
     } = options;
 
-    this.jiraProjectName = jiraProjectName;
     this.securityHub = new SecurityHub({ region, severities });
-    this.jiraOpenStatuses = jiraOpenStatuses;
     this.jira = new Jira();
   }
 
   async sync() {
     // Step 1. Get all open Security Hub issues from Jira for this AWS Account
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
-      this.jiraProjectName
     );
 
     // console.log(
@@ -63,9 +56,6 @@ export class SecurityHubJiraSync {
 
     // close all security-hub labeled Jira issues that do not have an active finding
     jiraIssues
-      .filter((issue) =>
-        this.jiraOpenStatuses.includes(issue.fields.status.name)
-      )
       .forEach((issue) => {
         if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
           this.jira.closeIssue(issue.key);
@@ -146,7 +136,6 @@ export class SecurityHubJiraSync {
   async createJiraIssueFromFinding(finding: OurFindingType) {
     const newIssueData = {
       fields: {
-        project: { key: this.jiraProjectName },
         summary: `SecurityHub Finding - ${finding.title}`,
         description: this.createIssueBody(finding),
         issuetype: { name: "Task" },
