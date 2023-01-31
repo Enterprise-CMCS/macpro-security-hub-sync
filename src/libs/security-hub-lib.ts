@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-securityhub";
 import { Logger } from "./error-lib";
 
-export interface FindingWithAccountAlias {
+export interface OurFindingType {
   title?: string;
   region?: string;
   accountAlias?: string;
@@ -56,13 +56,13 @@ export class SecurityHub {
       };
 
       // use a Set to store unique findings by title
-      const uniqueFindings = new Set<AwsSecurityFinding>();
+      const uniqueFindings = new Set<OurFindingType>();
 
       // use a variable to track pagination
       let nextToken: string | undefined = undefined;
 
       do {
-        const response: any = await client.send(
+        const response: GetFindingsCommandOutput = await securityHubClient.send(
           new GetFindingsCommand({
             Filters: filters,
             MaxResults: 100, // this is the maximum allowed per page
