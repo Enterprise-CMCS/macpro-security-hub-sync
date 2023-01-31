@@ -88,6 +88,7 @@ export class SecurityHubJiraSync {
       .map((issue) => {
         if (!expectedJiraIssueTitles.includes(issue.fields.summary))
           this.jira.closeIssue(issue.key);
+        }
       });
   }
 
