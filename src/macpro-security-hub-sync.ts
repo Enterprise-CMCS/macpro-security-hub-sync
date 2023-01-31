@@ -102,12 +102,12 @@ export class SecurityHubJiraSync {
   createIssueBody(finding: FindingWithAccountAliasPartial) {
     const {
       Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
-      Title = "",
-      Description = "",
+      title = "",
+      description = "",
       accountAlias = "",
-      AwsAccountId = "",
-      Severity = "",
-      StandardsControlArn = "",
+      awsAccountId = "",
+      severity = "",
+      standardsControlArn = "",
     } = finding;
 
     return `----
