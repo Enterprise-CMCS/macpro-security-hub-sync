@@ -1,23 +1,18 @@
-import { Jira, SecurityHub, FindingWithAccountAlias } from "./libs";
+import { Jira, SecurityHub, OurFindingType } from "./libs";
 import { Remediation } from "@aws-sdk/client-securityhub";
 import { IssueObject } from "jira-client";
 
-interface FindingWithAccountAliasPartial {
-  Title?: string;
-  Region?: string;
-  accountAlias?: string;
-  AwsAccountId?: string;
-  Severity?: string;
-  Description?: string;
-  StandardsControlArn?: string;
-  Remediation?: Remediation;
+interface SecurityHubJiraSyncOptions {
+  region?: string;
+  severities?: string[];
+  jiraOpenStatuses?: string[];
 }
 
 export class SecurityHubJiraSync {
-  private readonly jira = new Jira();
-  private readonly securityHub;
-  private readonly jira_open_statuses: string[];
-  private readonly jira_project_name: string;
+  private readonly jira: Jira;
+  private readonly securityHub: SecurityHub;
+  private readonly jiraOpenStatuses: string[];
+  private readonly jiraProjectName: string;
 
   constructor(
     jira_project_name: string,
