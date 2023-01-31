@@ -1,36 +1,25 @@
-import { Jira, SecurityHub, FindingWithAccountAlias } from "./libs";
+import { Jira, SecurityHub, OurFindingType } from "./libs";
 import { Remediation } from "@aws-sdk/client-securityhub";
 import { IssueObject } from "jira-client";
 
-interface FindingWithAccountAliasPartial {
-  Title?: string;
-  Region?: string;
-  accountAlias?: string;
-  AwsAccountId?: string;
-  Severity?: string;
-  Description?: string;
-  StandardsControlArn?: string;
-  Remediation?: Remediation;
+interface SecurityHubJiraSyncOptions {
+  region?: string;
+  severities?: string[];
 }
 
 export class SecurityHubJiraSync {
-  private readonly jira = new Jira();
-  private readonly securityHub;
+  private readonly jira: Jira;
+  private readonly securityHub: SecurityHub;
 
-  constructor(
-    options: Partial<{
-      region: string;
-      severities: string[];
-    }> = {}
-  ) {
-    const region = options.region || "us-east-1";
-    const severities = options.severities || ["HIGH", "CRITICAL"];
+  constructor(options: SecurityHubJiraSyncOptions = {}) {
+    const { region = "us-east-1", severities = ["HIGH", "CRITICAL"] } = options;
 
     this.securityHub = new SecurityHub({ region, severities });
+    this.jira = new Jira();
   }
 
   async sync() {
-    // Step 1. Get all Security Hub issues from Jira for this AWS Account, and for now filter to open statuses (TODO: discuss with the team)
+    // Step 1. Get all open Security Hub issues from Jira
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject();
 
     // console.log(
@@ -38,69 +27,55 @@ export class SecurityHubJiraSync {
     //   new Set(jiraIssues.map((i) => i.fields.status.name))
     // );
 
-    // Step 2. Get all current findings from Security Hub in this AWS account
-    const shFindings: FindingWithAccountAlias[] =
-      await this.securityHub.getAllActiveFindings();
+    // Step 2. Get all current findings from Security Hub
+    const shFindings = await this.securityHub.getAllActiveFindings();
 
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
 
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
-    const existingJiraIssueTitles = Array.from(
-      new Set(jiraIssues.map((i) => i.fields.summary))
-    );
-
-    const uniqueSecurityHubFindings = [
-      ...new Set(
-        shFindings.map((finding) =>
-          JSON.stringify(this.extractDesiredFieldsFromFinding(finding))
-        )
-      ),
-    ].map((finding) => JSON.parse(finding));
-
-    uniqueSecurityHubFindings
-      .filter(
-        (finding) =>
-          !existingJiraIssueTitles.includes(
-            "SecurityHub Finding - " + finding.Title
-          )
-      )
-      .map((finding) => this.createJiraIssueFromFinding(finding));
+    this.createJiraIssuesForNewFindings(jiraIssues, shFindings);
   }
 
   closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
-    shFindings: FindingWithAccountAlias[]
+    shFindings: OurFindingType[]
   ) {
     const expectedJiraIssueTitles = Array.from(
       new Set(
-        shFindings.map((finding) => `SecurityHub Finding - ${finding.Title}`)
+        shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`)
       )
     );
 
     // close all security-hub labeled Jira issues that do not have an active finding
-    jiraIssues.map((issue) => {
-      if (!expectedJiraIssueTitles.includes(issue.fields.summary))
+    jiraIssues.forEach((issue) => {
+      if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
         this.jira.closeIssue(issue.key);
+      }
     });
   }
 
-  createIssueBody(finding: FindingWithAccountAliasPartial) {
+  createIssueBody(finding: OurFindingType) {
     const {
-      Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
-      Title = "",
-      Description = "",
+      remediation: {
+        Recommendation: {
+          Url: remediationUrl = "",
+          Text: remediationText = "",
+        } = {},
+      } = {},
+      title = "",
+      description = "",
       accountAlias = "",
-      AwsAccountId = "",
-      Severity = "",
-      StandardsControlArn = "",
+      awsAccountId = "",
+      severity = "",
+      standardsControlArn = "",
     } = finding;
 
     return `----
 
       *This issue was generated from Security Hub data and is managed through automation.*
       Please do not edit the title or body of this issue, or remove the security-hub tag.  All other edits/comments are welcome.
-      Finding Title: ${Title}
+      Finding Title: ${title}
 
       ----
 
@@ -110,25 +85,25 @@ export class SecurityHubJiraSync {
 
       h2. Title:
 
-      ${Title}
+      ${title}
 
       h2. Description:
 
-      ${Description}
+      ${description}
 
       h2. Remediation:
 
-      ${Url}
-      ${Text}
+      ${remediationUrl}
+      ${remediationText}
 
       h2. AWS Account:
-      ${AwsAccountId} (${accountAlias})
+      ${awsAccountId} (${accountAlias})
 
       h2. Severity:
-      ${Severity}
+      ${severity}
 
       h2. SecurityHubFindingUrl:
-      ${this.createSecurityHubFindingUrl(StandardsControlArn)}
+      ${this.createSecurityHubFindingUrl(standardsControlArn)}
 
       h2. AC:
 
@@ -155,16 +130,16 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  async createJiraIssueFromFinding(finding: FindingWithAccountAliasPartial) {
+  async createJiraIssueFromFinding(finding: OurFindingType) {
     const newIssueData = {
       fields: {
-        summary: `SecurityHub Finding - ${finding.Title}`,
+        summary: `SecurityHub Finding - ${finding.title}`,
         description: this.createIssueBody(finding),
         issuetype: { name: "Task" },
         labels: [
           "security-hub",
-          finding.Region,
-          finding.Severity,
+          finding.region,
+          finding.severity,
           finding.accountAlias,
         ],
       },
@@ -173,20 +148,23 @@ export class SecurityHubJiraSync {
     console.log("new Jira issue created:", newIssueInfo);
   }
 
-  extractDesiredFieldsFromFinding(
-    finding: FindingWithAccountAlias
-  ): FindingWithAccountAliasPartial {
-    return {
-      Title: finding.Title,
-      Region: finding.Region,
-      accountAlias: finding.accountAlias,
-      AwsAccountId: finding.AwsAccountId,
-      Severity: (finding.Severity || { Label: "" }).Label,
-      Description: finding.Description,
-      StandardsControlArn:
-        (finding.ProductFields || {}).StandardsControlArn || "",
-      Remediation: finding.Remediation,
-    };
+  createJiraIssuesForNewFindings(
+    jiraIssues: IssueObject[],
+    shFindings: OurFindingType[]
+  ) {
+    const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
+    const uniqueSecurityHubFindings = [
+      ...new Set(shFindings.map((finding) => JSON.stringify(finding))),
+    ].map((finding) => JSON.parse(finding));
+
+    uniqueSecurityHubFindings
+      .filter(
+        (finding) =>
+          !existingJiraIssueTitles.includes(
+            `SecurityHub Finding - ${finding.title}`
+          )
+      )
+      .forEach((finding) => this.createJiraIssueFromFinding(finding));
   }
 }
 

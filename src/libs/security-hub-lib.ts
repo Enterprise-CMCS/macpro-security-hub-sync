@@ -2,46 +2,49 @@ import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
   GetFindingsCommand,
-  AwsSecurityFindingFilters,
+  GetFindingsCommandOutput,
+  Remediation,
   AwsSecurityFinding,
-  GetFindingsResponse,
 } from "@aws-sdk/client-securityhub";
-import { reportError } from "./error-lib";
+import { Logger } from "./error-lib";
 
-export interface FindingWithAccountAlias extends AwsSecurityFinding {
-  accountAlias: string;
+export interface OurFindingType {
+  title?: string;
+  region?: string;
+  accountAlias?: string;
+  awsAccountId?: string;
+  severity?: string;
+  description?: string;
+  standardsControlArn?: string;
+  remediation?: Remediation;
 }
 
 export class SecurityHub {
   private readonly region: string;
-  private readonly severities: string[];
-  private accountAlias: string = "";
+  private readonly severityLabels: { Comparison: string; Value: string }[];
+  private accountAlias = "";
 
   constructor({
     region = "us-east-1",
     severities = ["HIGH", "CRITICAL"],
   } = {}) {
     this.region = region;
-    this.severities = severities;
-    this.getAccountAlias().catch((e) => reportError(e));
+    this.severityLabels = severities.map((severity) => ({
+      Comparison: "EQUALS",
+      Value: severity,
+    }));
+    this.getAccountAlias().catch((error) => Logger.logError(error));
   }
 
-  private async getAccountAlias() {
-    const stsClient = new IAMClient({ region: this.region });
-    const { AccountAliases } = await stsClient.send(
-      new ListAccountAliasesCommand({})
-    );
-    this.accountAlias =
-      AccountAliases && AccountAliases[0] ? AccountAliases[0] : "";
+  private async getAccountAlias(): Promise<void> {
+    const iamClient = new IAMClient({ region: this.region });
+    const response = await iamClient.send(new ListAccountAliasesCommand({}));
+    this.accountAlias = response.AccountAliases?.[0] || "";
   }
 
   async getAllActiveFindings() {
     try {
-      const client = new SecurityHubClient({ region: this.region });
-      const severityLabels = this.severities.map((label) => ({
-        Comparison: "EQUALS",
-        Value: label,
-      }));
+      const securityHubClient = new SecurityHubClient({ region: this.region });
       const filters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
         WorkflowStatus: [
@@ -49,17 +52,17 @@ export class SecurityHub {
           { Comparison: "EQUALS", Value: "NOTIFIED" },
         ],
         ProductName: [{ Comparison: "EQUALS", Value: "Security Hub" }],
-        SeverityLabel: severityLabels,
+        SeverityLabel: this.severityLabels,
       };
 
       // use a Set to store unique findings by title
-      const uniqueFindings = new Set<AwsSecurityFinding>();
+      const uniqueFindings = new Set<OurFindingType>();
 
       // use a variable to track pagination
       let nextToken: string | undefined = undefined;
 
       do {
-        const response: any = await client.send(
+        const response: GetFindingsCommandOutput = await securityHubClient.send(
           new GetFindingsCommand({
             Filters: filters,
             MaxResults: 100, // this is the maximum allowed per page
@@ -68,7 +71,9 @@ export class SecurityHub {
         );
         if (response.Findings) {
           for (const finding of response.Findings) {
-            uniqueFindings.add(finding);
+            uniqueFindings.add(
+              this.awsSecurityFindingToOurFindingType(finding)
+            );
           }
         }
         nextToken = response.NextToken;
@@ -77,9 +82,25 @@ export class SecurityHub {
       return Array.from(uniqueFindings).map((finding) => {
         return { accountAlias: this.accountAlias, ...finding };
       });
-    } catch (e) {
-      reportError(e);
+    } catch (error) {
+      Logger.logError(error as Error);
       return [];
     }
+  }
+
+  awsSecurityFindingToOurFindingType(
+    finding: AwsSecurityFinding
+  ): OurFindingType {
+    if (!finding) return {};
+    return {
+      title: finding.Title,
+      region: finding.Region,
+      accountAlias: this.accountAlias,
+      awsAccountId: finding.AwsAccountId,
+      severity: finding.Severity!.Label,
+      description: finding.Description,
+      standardsControlArn: finding.ProductFields!.StandardsControlArn,
+      remediation: finding.Remediation,
+    };
   }
 }

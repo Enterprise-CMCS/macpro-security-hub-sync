@@ -1,8 +1,5 @@
-export function reportError(e: unknown) {
-  const error = e as Error;
-  console.error(`${error.name}: ${error.message}`);
-
-  // console.log("---------------");
-  // console.error(e);
-  // console.log("---------------");
+export class Logger {
+  static logError(error: Error) {
+    console.error(`Error: ${error.name}: ${error.message}`);
+  }
 }
