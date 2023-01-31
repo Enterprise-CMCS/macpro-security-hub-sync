@@ -35,13 +35,10 @@ export class SecurityHub {
     this.getAccountAlias().catch((error) => Logger.logError(error));
   }
 
-  private async getAccountAlias() {
-    const stsClient = new IAMClient({ region: this.region });
-    const { AccountAliases } = await stsClient.send(
-      new ListAccountAliasesCommand({})
-    );
-    this.accountAlias =
-      AccountAliases && AccountAliases[0] ? AccountAliases[0] : "";
+  private async getAccountAlias(): Promise<void> {
+    const iamClient = new IAMClient({ region: this.region });
+    const response = await iamClient.send(new ListAccountAliasesCommand({}));
+    this.accountAlias = response.AccountAliases?.[0] || "";
   }
 
   async getAllActiveFindings() {
