@@ -94,7 +94,7 @@ export class SecurityHubJiraSync {
 
   createIssueBody(finding: OurFindingType) {
     const {
-      Remediation: { Recommendation: { Url = "", Text = "" } = {} } = {},
+      remediation,
       title = "",
       description = "",
       accountAlias = "",
@@ -121,7 +121,7 @@ export class SecurityHubJiraSync {
 
       h2. Description:
 
-      ${Description}
+      ${description}
 
       h2. Remediation:
 
