@@ -57,7 +57,12 @@ export class SecurityHubJiraSync {
 
   createIssueBody(finding: OurFindingType) {
     const {
-      remediation,
+      remediation: {
+        Recommendation: {
+          Url: remediationUrl = "",
+          Text: remediationText = "",
+        } = {},
+      } = {},
       title = "",
       description = "",
       accountAlias = "",
@@ -88,8 +93,8 @@ export class SecurityHubJiraSync {
 
       h2. Remediation:
 
-      ${URL}
-      ${text}
+      ${remediationUrl}
+      ${remediationText}
 
       h2. AWS Account:
       ${awsAccountId} (${accountAlias})
