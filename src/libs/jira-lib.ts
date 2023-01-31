@@ -1,5 +1,6 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
+import { Logger } from "./error-lib";
 
 dotenv.config();
 
