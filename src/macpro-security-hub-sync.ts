@@ -32,13 +32,9 @@ export class SecurityHubJiraSync {
   }
 
   async sync() {
-    // Step 1. Get all Security Hub issues from Jira for this AWS Account, and for now filter to open statuses (TODO: discuss with the team)
-    const jiraIssues = (
-      await this.jira.getAllSecurityHubIssuesInJiraProject(
-        this.jira_project_name
-      )
-    ).filter((issue) =>
-      this.jira_open_statuses.includes(issue.fields.status.name)
+    // Step 1. Get all open Security Hub issues from Jira for this AWS Account
+    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
+      this.jiraProjectName
     );
 
     // console.log(
