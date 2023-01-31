@@ -11,6 +11,10 @@ export class Jira {
   constructor() {
     Jira.checkEnvVars();
 
+    this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
+      ? process.env.JIRA_OPEN_STATUSES.split(",")
+      : ["To Do", "In Progress"];
+
     this.jira = new JiraClient({
       host: process.env.JIRA_HOST!,
       username: process.env.JIRA_USERNAME,
@@ -21,7 +25,13 @@ export class Jira {
   }
 
   private static checkEnvVars(): void {
-    const requiredEnvVars = ["JIRA_HOST", "JIRA_USERNAME", "JIRA_TOKEN"];
+    const requiredEnvVars = [
+      "JIRA_HOST",
+      "JIRA_USERNAME",
+      "JIRA_TOKEN",
+      "JIRA_DOMAIN",
+      "JIRA_PROJECT",
+    ];
     const missingEnvVars = requiredEnvVars.filter(
       (envVar) => !process.env[envVar]
     );
