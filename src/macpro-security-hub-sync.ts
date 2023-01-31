@@ -187,26 +187,11 @@ export class SecurityHubJiraSync {
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
     console.log("new Jira issue created:", newIssueInfo);
   }
-
-  extractDesiredFieldsFromFinding(
-    finding: FindingWithAccountAlias
-  ): FindingWithAccountAliasPartial {
-    return {
-      Title: finding.Title,
-      Region: finding.Region,
-      accountAlias: finding.accountAlias,
-      AwsAccountId: finding.AwsAccountId,
-      Severity: (finding.Severity || { Label: "" }).Label,
-      Description: finding.Description,
-      StandardsControlArn:
-        (finding.ProductFields || {}).StandardsControlArn || "",
-      Remediation: finding.Remediation,
-    };
-  }
 }
 
 async function testing() {
-  await new SecurityHubJiraSync("TES4", { severities: ["MEDIUM"] }).sync();
+  // severities: ["MEDIUM"]
+  await new SecurityHubJiraSync("TES5", {}).sync();
 }
 
 testing();
