@@ -71,7 +71,9 @@ export class SecurityHub {
         );
         if (response.Findings) {
           for (const finding of response.Findings) {
-            uniqueFindings.add(finding);
+            uniqueFindings.add(
+              this.awsSecurityFindingToOurFindingType(finding)
+            );
           }
         }
         nextToken = response.NextToken;
@@ -84,5 +86,21 @@ export class SecurityHub {
       Logger.logError(error as Error);
       return [];
     }
+  }
+
+  awsSecurityFindingToOurFindingType(
+    finding: AwsSecurityFinding
+  ): OurFindingType {
+    if (!finding) return {};
+    return {
+      title: finding.Title,
+      region: finding.Region,
+      accountAlias: this.accountAlias,
+      awsAccountId: finding.AwsAccountId,
+      severity: finding.Severity!.Label,
+      description: finding.Description,
+      standardsControlArn: finding.ProductFields!.StandardsControlArn,
+      remediation: finding.Remediation,
+    };
   }
 }
