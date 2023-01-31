@@ -180,6 +180,25 @@ export class SecurityHubJiraSync {
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
     console.log("new Jira issue created:", newIssueInfo);
   }
+
+  createJiraIssuesForNewFindings(
+    jiraIssues: IssueObject[],
+    shFindings: OurFindingType[]
+  ) {
+    const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
+    const uniqueSecurityHubFindings = [
+      ...new Set(shFindings.map((finding) => JSON.stringify(finding))),
+    ].map((finding) => JSON.parse(finding));
+
+    uniqueSecurityHubFindings
+      .filter(
+        (finding) =>
+          !existingJiraIssueTitles.includes(
+            `SecurityHub Finding - ${finding.title}`
+          )
+      )
+      .forEach((finding) => this.createJiraIssueFromFinding(finding));
+  }
 }
 
 async function testing() {
