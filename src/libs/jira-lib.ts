@@ -5,9 +5,16 @@ dotenv.config();
 
 export class Jira {
   private readonly jira;
+  jiraOpenStatuses: string[];
 
   constructor() {
-    const requiredEnvVars = ["JIRA_HOST", "JIRA_USERNAME", "JIRA_TOKEN"];
+    const requiredEnvVars = [
+      "JIRA_HOST",
+      "JIRA_USERNAME",
+      "JIRA_TOKEN",
+      "JIRA_DOMAIN",
+      "JIRA_PROJECT",
+    ];
     let missingEnvVars: string[] = [];
     requiredEnvVars.forEach((envVar) => {
       if (!process.env[envVar]) missingEnvVars.push(envVar);
@@ -17,6 +24,10 @@ export class Jira {
         `required environment variables are not set ${missingEnvVars}`
       );
     }
+
+    this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
+      ? process.env.JIRA_OPEN_STATUSES.split(",")
+      : ["To Do", "In Progress"];
 
     this.jira = new JiraClient({
       protocol: "https",
@@ -29,11 +40,14 @@ export class Jira {
     });
   }
 
-  async getAllSecurityHubIssuesInJiraProject(
-    projectKey: string
-  ): Promise<IssueObject[]> {
+  async getAllSecurityHubIssuesInJiraProject(): Promise<IssueObject[]> {
     const searchOptions: JiraClient.SearchQuery = {};
-    const query = `project = ${projectKey} AND labels = security-hub`;
+    const query = `project = ${
+      process.env.JIRA_PROJECT
+    } AND labels = security-hub AND status in ("${this.jiraOpenStatuses.join(
+      '","'
+    )}")`;
+
     let totalIssuesReceived = 0;
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
@@ -51,11 +65,11 @@ export class Jira {
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       console.log("Creating Jira issue.");
-
+      issue.fields.project = { key: process.env.JIRA_PROJECT };
       const response = await this.jira.addNewIssue(issue);
       response[
         "webUrl"
-      ] = `https://jonholman.atlassian.net/browse/${response.key}`;
+      ] = `https://${process.env.JIRA_DOMAIN}/browse/${response.key}`;
       return response;
     } catch (e) {
       console.error("Error creating new issue:", e);
