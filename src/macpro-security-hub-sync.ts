@@ -18,13 +18,12 @@ export class SecurityHubJiraSync {
     jiraProjectName: string,
     options: SecurityHubJiraSyncOptions = {}
   ) {
-    const region = options.region || "us-east-1";
-    const severities = options.severities || ["HIGH", "CRITICAL"];
-    const jira_open_statuses = options.jira_open_statuses || [
-      "To Do",
-      "In Progress",
-    ];
-    this.jira_project_name = jira_project_name;
+    const {
+      region = "us-east-1",
+      severities = ["HIGH", "CRITICAL"],
+      jiraOpenStatuses = ["To Do", "In Progress"],
+    } = options;
+
     this.jiraProjectName = jiraProjectName;
     this.securityHub = new SecurityHub({ region, severities });
     this.jiraOpenStatuses = jiraOpenStatuses;
