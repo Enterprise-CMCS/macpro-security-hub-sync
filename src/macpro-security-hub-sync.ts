@@ -168,8 +168,4 @@ export class SecurityHubJiraSync {
   }
 }
 
-async function testing() {
-  await new SecurityHubJiraSync({ severities: ["MEDIUM"] }).sync();
-}
 
-testing();
