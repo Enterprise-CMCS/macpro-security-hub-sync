@@ -15,12 +15,8 @@ export class SecurityHubJiraSync {
   private readonly jiraProjectName: string;
 
   constructor(
-    jira_project_name: string,
-    options: Partial<{
-      region: string;
-      severities: string[];
-      jira_open_statuses: string[];
-    }> = {}
+    jiraProjectName: string,
+    options: SecurityHubJiraSyncOptions = {}
   ) {
     const region = options.region || "us-east-1";
     const severities = options.severities || ["HIGH", "CRITICAL"];
