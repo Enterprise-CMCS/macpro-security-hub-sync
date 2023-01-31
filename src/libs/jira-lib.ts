@@ -1,5 +1,6 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
+import { Logger } from "./error-lib";
 
 dotenv.config();
 
@@ -7,26 +8,28 @@ export class Jira {
   private readonly jira;
 
   constructor() {
-    const requiredEnvVars = ["JIRA_HOST", "JIRA_USERNAME", "JIRA_TOKEN"];
-    let missingEnvVars: string[] = [];
-    requiredEnvVars.forEach((envVar) => {
-      if (!process.env[envVar]) missingEnvVars.push(envVar);
-    });
-    if (missingEnvVars.length) {
-      throw new Error(
-        `required environment variables are not set ${missingEnvVars}`
-      );
-    }
+    Jira.checkEnvVars();
 
     this.jira = new JiraClient({
-      protocol: "https",
-      host: process.env.JIRA_HOST!,
-      port: "443",
+      host: process.env.JIRA_HOST,
       username: process.env.JIRA_USERNAME,
       password: process.env.JIRA_TOKEN,
       apiVersion: "2",
       strictSSL: true,
     });
+  }
+
+  private static checkEnvVars(): void {
+    const requiredEnvVars = ["JIRA_HOST", "JIRA_USERNAME", "JIRA_TOKEN"];
+    const missingEnvVars = requiredEnvVars.filter(
+      (envVar) => !process.env[envVar]
+    );
+
+    if (missingEnvVars.length) {
+      throw new Error(
+        `Missing required environment variables: ${missingEnvVars.join(", ")}`
+      );
+    }
   }
 
   async getAllSecurityHubIssuesInJiraProject(
