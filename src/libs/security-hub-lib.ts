@@ -21,7 +21,7 @@ export interface FindingWithAccountAlias {
 
 export class SecurityHub {
   private readonly region: string;
-  private readonly severities: { Comparison: string; Value: string }[];
+  private readonly severityLabels: { Comparison: string; Value: string }[];
   private accountAlias = "";
 
   constructor({
@@ -29,7 +29,7 @@ export class SecurityHub {
     severities = ["HIGH", "CRITICAL"],
   } = {}) {
     this.region = region;
-    this.severities = severities.map((severity) => ({
+    this.severityLabels = severities.map((severity) => ({
       Comparison: "EQUALS",
       Value: severity,
     }));
@@ -44,11 +44,7 @@ export class SecurityHub {
 
   async getAllActiveFindings() {
     try {
-      const client = new SecurityHubClient({ region: this.region });
-      const severityLabels = this.severities.map((label) => ({
-        Comparison: "EQUALS",
-        Value: label,
-      }));
+      const securityHubClient = new SecurityHubClient({ region: this.region });
       const filters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
         WorkflowStatus: [
@@ -56,7 +52,7 @@ export class SecurityHub {
           { Comparison: "EQUALS", Value: "NOTIFIED" },
         ],
         ProductName: [{ Comparison: "EQUALS", Value: "Security Hub" }],
-        SeverityLabel: severityLabels,
+        SeverityLabel: this.severityLabels,
       };
 
       // use a Set to store unique findings by title
