@@ -5,20 +5,14 @@ import { IssueObject } from "jira-client";
 interface SecurityHubJiraSyncOptions {
   region?: string;
   severities?: string[];
-  jiraOpenStatuses?: string[];
 }
 
 export class SecurityHubJiraSync {
   private readonly jira: Jira;
   private readonly securityHub: SecurityHub;
 
-  constructor(
-    options: SecurityHubJiraSyncOptions = {}
-  ) {
-    const {
-      region = "us-east-1",
-      severities = ["HIGH", "CRITICAL"],
-    } = options;
+  constructor(options: SecurityHubJiraSyncOptions = {}) {
+    const { region = "us-east-1", severities = ["HIGH", "CRITICAL"] } = options;
 
     this.securityHub = new SecurityHub({ region, severities });
     this.jira = new Jira();
@@ -26,8 +20,7 @@ export class SecurityHubJiraSync {
 
   async sync() {
     // Step 1. Get all open Security Hub issues from Jira for this AWS Account
-    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
-    );
+    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject();
 
     // console.log(
     //   "all current statuses on security hub issues:",
@@ -172,8 +165,7 @@ export class SecurityHubJiraSync {
 }
 
 async function testing() {
-  // severities: ["MEDIUM"]
-  await new SecurityHubJiraSync("TES5", {}).sync();
+  await new SecurityHubJiraSync({ severities: ["MEDIUM"] }).sync();
 }
 
 testing();
