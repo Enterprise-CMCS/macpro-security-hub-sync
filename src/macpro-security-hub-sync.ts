@@ -42,8 +42,7 @@ export class SecurityHubJiraSync {
     // );
 
     // Step 2. Get all current findings from Security Hub in this AWS account
-    const shFindings: FindingWithAccountAlias[] =
-      await this.securityHub.getAllActiveFindings();
+    const shFindings = await this.securityHub.getAllActiveFindings();
 
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
