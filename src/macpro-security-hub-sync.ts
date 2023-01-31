@@ -132,17 +132,17 @@ export class SecurityHubJiraSync {
 
       h2. Remediation:
 
-      ${Url}
-      ${Text}
+      ${URL}
+      ${text}
 
       h2. AWS Account:
-      ${AwsAccountId} (${accountAlias})
+      ${awsAccountId} (${accountAlias})
 
       h2. Severity:
-      ${Severity}
+      ${severity}
 
       h2. SecurityHubFindingUrl:
-      ${this.createSecurityHubFindingUrl(StandardsControlArn)}
+      ${this.createSecurityHubFindingUrl(standardsControlArn)}
 
       h2. AC:
 
