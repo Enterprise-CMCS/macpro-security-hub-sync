@@ -7,22 +7,32 @@ import {
 } from "@aws-sdk/client-securityhub";
 import { Logger } from "./error-lib";
 
-export interface FindingWithAccountAlias extends AwsSecurityFinding {
-  accountAlias: string;
+export interface FindingWithAccountAlias {
+  title?: string;
+  region?: string;
+  accountAlias?: string;
+  awsAccountId?: string;
+  severity?: string;
+  description?: string;
+  standardsControlArn?: string;
+  remediation?: Remediation;
 }
 
 export class SecurityHub {
   private readonly region: string;
-  private readonly severities: string[];
-  private accountAlias: string = "";
+  private readonly severities: { Comparison: string; Value: string }[];
+  private accountAlias = "";
 
   constructor({
     region = "us-east-1",
     severities = ["HIGH", "CRITICAL"],
   } = {}) {
     this.region = region;
-    this.severities = severities;
-    this.getAccountAlias().catch((e) => reportError(e));
+    this.severities = severities.map((severity) => ({
+      Comparison: "EQUALS",
+      Value: severity,
+    }));
+    this.getAccountAlias().catch((error) => Logger.logError(error));
   }
 
   private async getAccountAlias() {
