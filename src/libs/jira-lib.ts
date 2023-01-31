@@ -9,22 +9,7 @@ export class Jira {
   jiraOpenStatuses: string[];
 
   constructor() {
-    const requiredEnvVars = [
-      "JIRA_HOST",
-      "JIRA_USERNAME",
-      "JIRA_TOKEN",
-      "JIRA_DOMAIN",
-      "JIRA_PROJECT",
-    ];
-    let missingEnvVars: string[] = [];
-    requiredEnvVars.forEach((envVar) => {
-      if (!process.env[envVar]) missingEnvVars.push(envVar);
-    });
-    if (missingEnvVars.length) {
-      throw new Error(
-        `required environment variables are not set ${missingEnvVars}`
-      );
-    }
+    Jira.checkEnvVars();
 
     this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
       ? process.env.JIRA_OPEN_STATUSES.split(",")
@@ -104,6 +89,25 @@ export class Jira {
     } catch (error) {
       console.error(
         `Failed to transition issue ${issueKey} to "Done": ${error}`
+      );
+    }
+  }
+
+  private static checkEnvVars(): void {
+    const requiredEnvVars = [
+      "JIRA_HOST",
+      "JIRA_USERNAME",
+      "JIRA_TOKEN",
+      "JIRA_DOMAIN",
+      "JIRA_PROJECT",
+    ];
+    const missingEnvVars = requiredEnvVars.filter(
+      (envVar) => !process.env[envVar]
+    );
+
+    if (missingEnvVars.length) {
+      throw new Error(
+        `Missing required environment variables: ${missingEnvVars.join(", ")}`
       );
     }
   }
