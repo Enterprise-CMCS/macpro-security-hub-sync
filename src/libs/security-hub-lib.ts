@@ -4,6 +4,7 @@ import {
   GetFindingsCommand,
   GetFindingsCommandOutput,
   Remediation,
+  AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
 import { Logger } from "./error-lib";
 
