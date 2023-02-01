@@ -141,6 +141,7 @@ export class SecurityHubJiraSync {
           finding.region,
           finding.severity,
           finding.accountAlias,
+          finding.awsAccountId,
         ],
       },
     };

@@ -6,19 +6,14 @@ dotenv.config();
 
 export class Jira {
   private readonly jira;
-  jiraOpenStatuses: string[];
+  jiraClosedStatuses: string[];
 
   constructor() {
     Jira.checkEnvVars();
 
-    this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
-      ? process.env.JIRA_OPEN_STATUSES.split(",")
-      : ["To Do", "In Progress"];
-
-
-    this.jiraOpenStatuses = process.env.JIRA_OPEN_STATUSES
-      ? process.env.JIRA_OPEN_STATUSES.split(",")
-      : ["To Do", "In Progress"];
+    this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
+      ? process.env.JIRA_CLOSED_STATUSES.split(",")
+      : ["Done"];
 
     this.jira = new JiraClient({
       protocol: "https",
@@ -36,8 +31,8 @@ export class Jira {
       "JIRA_HOST",
       "JIRA_USERNAME",
       "JIRA_TOKEN",
-      "JIRA_DOMAIN",
       "JIRA_PROJECT",
+      "PROJECT",
     ];
     const missingEnvVars = requiredEnvVars.filter(
       (envVar) => !process.env[envVar]
@@ -54,7 +49,7 @@ export class Jira {
     const searchOptions: JiraClient.SearchQuery = {};
     const query = `project = ${
       process.env.JIRA_PROJECT
-    } AND labels = security-hub AND status in ("${this.jiraOpenStatuses.join(
+    } AND labels = security-hub AND status not in ("${this.jiraClosedStatuses.join(
       '","'
     )}")`;
 
@@ -76,10 +71,14 @@ export class Jira {
     try {
       console.log("Creating Jira issue.");
       issue.fields.project = { key: process.env.JIRA_PROJECT };
+
+      // add aditional labels
+      issue.fields.labels.push(process.env.PROJECT);
+
       const response = await this.jira.addNewIssue(issue);
       response[
         "webUrl"
-      ] = `https://${process.env.JIRA_DOMAIN}/browse/${response.key}`;
+      ] = `https://${process.env.JIRA_HOST}/browse/${response.key}`;
       return response;
     } catch (e) {
       console.error("Error creating new issue:", e);
