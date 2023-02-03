@@ -168,5 +168,3 @@ export class SecurityHubJiraSync {
       .forEach((finding) => this.createJiraIssueFromFinding(finding));
   }
 }
-
-
