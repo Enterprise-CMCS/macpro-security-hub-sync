@@ -97,9 +97,15 @@ export class SecurityHub {
       region: finding.Region,
       accountAlias: this.accountAlias,
       awsAccountId: finding.AwsAccountId,
-      severity: finding.Severity!.Label,
+      severity:
+        finding.Severity && finding.Severity.Label
+          ? finding.Severity.Label
+          : "",
       description: finding.Description,
-      standardsControlArn: finding.ProductFields!.StandardsControlArn,
+      standardsControlArn:
+        finding.ProductFields && finding.ProductFields.StandardsControlArn
+          ? finding.ProductFields.StandardsControlArn
+          : "",
       remediation: finding.Remediation,
     };
   }
