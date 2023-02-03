@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-securityhub";
 import { Logger } from "./error-lib";
 
-export interface OurFindingType {
+export interface SecurityHubFinding {
   title?: string;
   region?: string;
   accountAlias?: string;
@@ -56,7 +56,7 @@ export class SecurityHub {
       };
 
       // use a Set to store unique findings by title
-      const uniqueFindings = new Set<OurFindingType>();
+      const uniqueFindings = new Set<SecurityHubFinding>();
 
       // use a variable to track pagination
       let nextToken: string | undefined = undefined;
@@ -72,7 +72,7 @@ export class SecurityHub {
         if (response.Findings) {
           for (const finding of response.Findings) {
             uniqueFindings.add(
-              this.awsSecurityFindingToOurFindingType(finding)
+              this.awsSecurityFindingToSecurityHubFinding(finding)
             );
           }
         }
@@ -88,9 +88,9 @@ export class SecurityHub {
     }
   }
 
-  awsSecurityFindingToOurFindingType(
+  awsSecurityFindingToSecurityHubFinding(
     finding: AwsSecurityFinding
-  ): OurFindingType {
+  ): SecurityHubFinding {
     if (!finding) return {};
     return {
       title: finding.Title,

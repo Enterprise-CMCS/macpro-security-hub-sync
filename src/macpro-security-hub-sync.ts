@@ -1,4 +1,4 @@
-import { Jira, SecurityHub, OurFindingType } from "./libs";
+import { Jira, SecurityHub, SecurityHubFinding } from "./libs";
 import { Remediation } from "@aws-sdk/client-securityhub";
 import { IssueObject } from "jira-client";
 
@@ -39,7 +39,7 @@ export class SecurityHubJiraSync {
 
   closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
-    shFindings: OurFindingType[]
+    shFindings: SecurityHubFinding[]
   ) {
     const expectedJiraIssueTitles = Array.from(
       new Set(
@@ -55,7 +55,7 @@ export class SecurityHubJiraSync {
     });
   }
 
-  createIssueBody(finding: OurFindingType) {
+  createIssueBody(finding: SecurityHubFinding) {
     const {
       remediation: {
         Recommendation: {
@@ -130,7 +130,7 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  async createJiraIssueFromFinding(finding: OurFindingType) {
+  async createJiraIssueFromFinding(finding: SecurityHubFinding) {
     const newIssueData = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,
@@ -151,7 +151,7 @@ export class SecurityHubJiraSync {
 
   createJiraIssuesForNewFindings(
     jiraIssues: IssueObject[],
-    shFindings: OurFindingType[]
+    shFindings: SecurityHubFinding[]
   ) {
     const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
     const uniqueSecurityHubFindings = [
