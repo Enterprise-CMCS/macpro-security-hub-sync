@@ -21,12 +21,12 @@ const searchJiraResponse = {
   ],
 };
 
-const LIST_ACCOUNT_ALIASES_RESPONSE = {
+const listAccountAliasesResponse = {
   $metadata: {},
   AccountAliases: ["my-account-alias"],
 };
 
-const GET_FINDINGS_COMMAND_RESPONSE = {
+const getFindingsCommandResponse = {
   Findings: [
     {
       SchemaVersion: undefined,
@@ -51,14 +51,28 @@ searchJiraStub.resolves(searchJiraResponse);
 
 sHClient
   .on(GetFindingsCommand, {})
-  .resolvesOnce({ ...GET_FINDINGS_COMMAND_RESPONSE, NextToken: "test" })
-  .resolves(GET_FINDINGS_COMMAND_RESPONSE);
+  .resolvesOnce({ ...getFindingsCommandResponse, NextToken: "test" })
+  .resolves({
+    ...getFindingsCommandResponse,
+    ...{
+      Findings: [
+        {
+          ...getFindingsCommandResponse.Findings[0],
+          ProductFields: {
+            Title: "Test Finding",
+            StandardsControlArn:
+              "arn:aws:securityhub:us-east-1:0123456789012:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3",
+          },
+        },
+      ],
+    },
+  });
 
 beforeEach(() => {
   iamClient.reset();
   iamClient
     .on(ListAccountAliasesCommand, {})
-    .resolves(LIST_ACCOUNT_ALIASES_RESPONSE);
+    .resolves(listAccountAliasesResponse);
   searchJiraStub.resetBehavior();
   searchJiraStub.resolves(searchJiraResponse);
 });
