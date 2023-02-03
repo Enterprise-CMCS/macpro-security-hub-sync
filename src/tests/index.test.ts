@@ -81,6 +81,11 @@ beforeEach(() => {
   searchJiraStub.resolves(searchJiraResponse);
   addNewIssueJiraStub.resetBehavior();
   addNewIssueJiraStub.resolves(addNewIssueJiraResponse);
+  process.env.JIRA_HOST = "test";
+  process.env.JIRA_USERNAME = "test";
+  process.env.JIRA_TOKEN = "test";
+  process.env.JIRA_PROJECT = "test";
+  process.env.JIRA_CLOSED_STATUSES = "test";
   process.env.PROJECT = "test";
 });
 
