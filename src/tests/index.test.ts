@@ -1,4 +1,4 @@
-import { it, describe, expect, beforeEach, vi } from "vitest";
+import { it, describe, expect, beforeEach } from "vitest";
 import { SecurityHubJiraSync } from "../index";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import { mockClient } from "aws-sdk-client-mock";
@@ -7,9 +7,7 @@ import sinon from "sinon";
 
 const searchJiraResponse = { issues: [] };
 const iamClient = mockClient(IAMClient);
-
 const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
-
 searchJiraStub.resolves(searchJiraResponse);
 
 const LIST_ACCOUNT_ALIASES_RESPONSE = {
@@ -28,21 +26,16 @@ beforeEach(() => {
   searchJiraStub.resolves(searchJiraResponse);
 });
 
-describe("SecurityHubJiraSync Tests", () => {
+describe("SecurityHubJiraSync", () => {
   process.env.PROJECT = "myProject";
 
-  describe("SecurityHubJiraSync Tests", async () => {
+  describe("JiraClient Tests", async () => {
     it("happy path", async () => {
       const jira = new JiraClient({ host: "" });
-
       const jqlString =
         'project = T4 AND labels = security-hub AND status not in ("Done")';
 
       const result = await jira.searchJira(jqlString, {});
-
-      console.log("result:", result);
-      expect(result.issues).toEqual([]);
-
       expect(result).toEqual(searchJiraResponse);
     });
 
