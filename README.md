@@ -28,7 +28,7 @@
 
 This package syncs AWS Security Hub Findings to Jira.
 
-- When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 GH Issue created.
+- When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 Jira Issue created.
 - By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
 - When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
 
