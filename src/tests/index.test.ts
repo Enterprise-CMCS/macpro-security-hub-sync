@@ -20,6 +20,9 @@ const searchJiraResponse = {
     },
   ],
 };
+const addNewIssueJiraResponse = {
+  key: "TEST-15",
+};
 
 const listAccountAliasesResponse = {
   $metadata: {},
@@ -48,6 +51,7 @@ const iamClient = mockClient(IAMClient);
 const sHClient = mockClient(SecurityHubClient);
 const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
 searchJiraStub.resolves(searchJiraResponse);
+const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
 
 sHClient
   .on(GetFindingsCommand, {})
@@ -75,6 +79,9 @@ beforeEach(() => {
     .resolves(listAccountAliasesResponse);
   searchJiraStub.resetBehavior();
   searchJiraStub.resolves(searchJiraResponse);
+  addNewIssueJiraStub.resetBehavior();
+  addNewIssueJiraStub.resolves(addNewIssueJiraResponse);
+  process.env.PROJECT = "test";
 });
 
 describe("SecurityHubJiraSync", () => {
