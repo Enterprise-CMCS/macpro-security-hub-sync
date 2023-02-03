@@ -7,10 +7,12 @@ dotenv.config();
 export class Jira {
   private readonly jira;
   jiraClosedStatuses: string[];
+  project: string;
 
   constructor() {
     Jira.checkEnvVars();
 
+    this.project = process.env.PROJECT ?? "";
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",")
       : ["Done"];
@@ -47,8 +49,8 @@ export class Jira {
 
   async getAllSecurityHubIssuesInJiraProject(): Promise<IssueObject[]> {
     const searchOptions: JiraClient.SearchQuery = {};
-    const query = `project = ${
-      process.env.JIRA_PROJECT
+    const query = `project = ${process.env.JIRA_PROJECT} AND labels = ${
+      this.project
     } AND labels = security-hub AND status not in ("${this.jiraClosedStatuses.join(
       '","'
     )}")`;
@@ -73,7 +75,7 @@ export class Jira {
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       // add aditional labels
-      issue.fields.labels.push(process.env.PROJECT);
+      issue.fields.labels.push(this.project);
 
       const response = await this.jira.addNewIssue(issue);
       response[
@@ -87,6 +89,7 @@ export class Jira {
   }
 
   async closeIssue(issueKey: string) {
+    if (!issueKey) return;
     try {
       console.log("need to close jira issue:", issueKey);
 
