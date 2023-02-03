@@ -1,12 +1,26 @@
 import { it, describe, expect, beforeEach } from "vitest";
 import { SecurityHubJiraSync } from "../index";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
+import {
+  SecurityHubClient,
+  GetFindingsCommand,
+} from "@aws-sdk/client-securityhub";
 import { mockClient } from "aws-sdk-client-mock";
 import JiraClient from "jira-client";
 import sinon from "sinon";
 
-const searchJiraResponse = { issues: [] };
+const searchJiraResponse = {
+  issues: [
+    {
+      fields: {
+        summary: "Sample SecurityHub Finding",
+      },
+    },
+  ],
+};
+
 const iamClient = mockClient(IAMClient);
+const sHClient = mockClient(SecurityHubClient);
 const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
 searchJiraStub.resolves(searchJiraResponse);
 
@@ -16,6 +30,15 @@ const LIST_ACCOUNT_ALIASES_RESPONSE = {
   },
   AccountAliases: ["my-account-alias"],
 };
+const GET_FINDINGS_COMMAND_RESPONSE = {
+  Findings: [],
+  $metadata: {},
+};
+
+sHClient
+  .on(GetFindingsCommand, {})
+  .resolvesOnce({ ...GET_FINDINGS_COMMAND_RESPONSE, NextToken: "test" })
+  .resolves(GET_FINDINGS_COMMAND_RESPONSE);
 
 beforeEach(() => {
   iamClient.reset();
