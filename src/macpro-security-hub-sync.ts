@@ -5,17 +5,20 @@ import { IssueObject } from "jira-client";
 interface SecurityHubJiraSyncOptions {
   region?: string;
   severities?: string[];
+  customJiraFields?: { [id: string] : any; };
 }
 
 export class SecurityHubJiraSync {
   private readonly jira: Jira;
   private readonly securityHub: SecurityHub;
+  private readonly customJiraFields;
 
   constructor(options: SecurityHubJiraSyncOptions = {}) {
-    const { region = "us-east-1", severities = ["HIGH", "CRITICAL"] } = options;
+    const { region = "us-east-1", severities = ["HIGH", "CRITICAL"], customJiraFields = {} } = options;
 
     this.securityHub = new SecurityHub({ region, severities });
     this.jira = new Jira();
+    this.customJiraFields = customJiraFields;
   }
 
   async sync() {
@@ -143,6 +146,7 @@ export class SecurityHubJiraSync {
           finding.accountAlias,
           finding.awsAccountId,
         ],
+        ...this.customJiraFields,
       },
     };
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
