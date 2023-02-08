@@ -73,8 +73,8 @@ Or, you can initialize and run it with more options:
 
 ```
 await new SecurityHubJiraSync({
-      region: "us-west-2", // Which regional Security Hub to scrape; default is us-east-1
-      severities: ["CRITICAL", "HIGH", "MEDIUM"], // Inclusive list of all severities to find; default is CRITICAL and HIGH
+      region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
+      severities: ["CRITICAL", "HIGH", "MEDIUM"], // List of all severities to find; default is ["CRITICAL", "HIGH"]
       customJiraFields: { // A map of custom fields to add to each Jira Issue; no default; making this nicer is WIP
         customfield_14117: [{value: "Platform Team"}],
         customfield_14151: [{value: "Not Applicable "}],
