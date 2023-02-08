@@ -13,7 +13,6 @@ export class SecurityHubJiraSync {
   private readonly securityHub: SecurityHub;
   private readonly customJiraFields;
   private readonly region;
-  private readonly project;
   constructor(options: SecurityHubJiraSyncOptions = {}) {
     const {
       region = "us-east-1",
@@ -22,7 +21,6 @@ export class SecurityHubJiraSync {
     } = options;
     this.securityHub = new SecurityHub({ region, severities });
     this.region = region;
-    this.project = process.env.PROJECT || "security-hub:no-project-specified"; // This is the application project name that is used as a label, not the Jira Project name
     this.jira = new Jira();
     this.customJiraFields = customJiraFields;
   }
@@ -31,7 +29,7 @@ export class SecurityHubJiraSync {
     // Step 0. Gather and set some information that will be used throughout this function
     // I think this should probably be in the constructor?
     const accountId = await this.getAWSAccountID();
-    const identifyingLabels: string[] = [accountId, this.project, this.region];
+    const identifyingLabels: string[] = [accountId, this.region];
 
     // Step 1. Get all open Security Hub issues from Jira
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(

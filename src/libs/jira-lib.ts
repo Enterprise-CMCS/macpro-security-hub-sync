@@ -7,12 +7,10 @@ dotenv.config();
 export class Jira {
   private readonly jira;
   jiraClosedStatuses: string[];
-  project: string;
 
   constructor() {
     Jira.checkEnvVars();
 
-    this.project = process.env.PROJECT ?? "";
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",")
       : ["Done"];
@@ -85,10 +83,8 @@ export class Jira {
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       console.log("Creating Jira issue.");
+      
       issue.fields.project = { key: process.env.JIRA_PROJECT };
-
-      // add aditional labels
-      issue.fields.labels.push(this.project);
 
       const response = await this.jira.addNewIssue(issue);
       response[
