@@ -4,7 +4,6 @@ import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
   GetFindingsCommand,
-  AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
@@ -92,7 +91,6 @@ beforeEach(() => {
   process.env.JIRA_TOKEN = "test";
   process.env.JIRA_PROJECT = "test";
   process.env.JIRA_CLOSED_STATUSES = "test";
-  process.env.PROJECT = "test";
 });
 
 describe("SecurityHubJiraSync", () => {
