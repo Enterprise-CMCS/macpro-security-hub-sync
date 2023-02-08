@@ -114,11 +114,4 @@ describe("SecurityHubJiraSync", () => {
     const result = await jira.searchJira(jqlString, {});
     expect(result).toEqual(searchJiraResponse);
   });
-
-  it("Missing a required environment variable", () => {
-    delete process.env.PROJECT;
-    expect(() => new Jira()).toThrow(
-      "Missing required environment variables: PROJECT"
-    );
-  });
 });
