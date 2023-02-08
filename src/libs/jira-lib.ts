@@ -1,6 +1,5 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
-import { Logger } from "./error-lib";
 
 dotenv.config();
 
@@ -104,7 +103,6 @@ export class Jira {
       const doneTransition = transitions.transitions.find(
         (t: { name: string }) => t.name === "Done"
       );
-      const doneTransitionId = doneTransition ? doneTransition.id : undefined;
 
       if (!doneTransition) {
         console.error(`Cannot find "Done" transition for issue ${issueKey}`);
