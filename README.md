@@ -29,13 +29,24 @@
 
 ## Usage
 
-Install, import, and execute a sync:
+Set a few enviroment variables that are expected by the package:
+
+```
+export JIRA_HOST=yourorg.atlassian.net
+export JIRA_PROJECT=OY2 // This is the ID for the Jira Project you want to interact with
+export JIRA_USERNAME="myuser@example.com"
+export JIRA_TOKEN="a very long string" // This should be a [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) that you generate
+```
+
+Install the package with a dependency manager of your choice, probably as a dev dependency:
 
 ```
 npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
+```
 
-...
+Import the package and execute a sync:
 
+```
 import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 await new SecurityHubJiraSync().sync();
 ```
