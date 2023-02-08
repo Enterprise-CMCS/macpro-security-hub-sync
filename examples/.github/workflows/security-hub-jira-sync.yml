@@ -18,20 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Configure direnv
-        uses: HatsuneMiku3939/direnv-action@v1
-
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: .nvmrc
+          node-version: 16
 
-      - name: Node cache
-        uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
-          key: ${{ github.workflow }}-${{ github.job }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
+      # AWS credentials must be provided to get findings from security hub; how you inject credentials can vary.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
@@ -39,15 +31,12 @@ jobs:
           aws-region: us-east-1
           role-duration-seconds: 10800
 
+      - run: npm install
+
       - name: Invoke Security Hub Jira Sync
-        id: runningStages
         env:
           JIRA_HOST: qmacbis.atlassian.net
-          JIRA_USERNAME: xxx
-          JIRA_TOKEN: xxx
           JIRA_PROJECT: OY2
-          JIRA_CLOSED_STATUSES: "Done"
-          PROJECT: cms-bigmac
-        run: |
-          npm i -g ts-node
-          ts-node src/run-sync.ts
+          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        run: node run.js
