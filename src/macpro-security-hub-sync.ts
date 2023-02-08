@@ -31,11 +31,7 @@ export class SecurityHubJiraSync {
     // Step 0. Gather and set some information that will be used throughout this function
     // I think this should probably be in the constructor?
     const accountId = await this.getAWSAccountID();
-    const identifyingLabels: string[] = [
-      accountId,
-      this.project,
-      this.region,
-    ];
+    const identifyingLabels: string[] = [accountId, this.project, this.region];
 
     // Step 1. Get all open Security Hub issues from Jira
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
@@ -64,7 +60,7 @@ export class SecurityHubJiraSync {
     });
     const command = new GetCallerIdentityCommand({});
     const response = await client.send(command);
-    let accountID:string = response.Account || "";
+    let accountID: string = response.Account || "";
     if (!accountID.match("[0-9]{12}")) {
       throw "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue.";
     }
