@@ -50,7 +50,6 @@ export class Jira {
     identifyingLabels: string[]
   ): Promise<IssueObject[]> {
     // think reduce not map
-    console.log(identifyingLabels);
     const labelQuery = identifyingLabels.reduce(
       (accumulator, currentValue) =>
         accumulator + `AND labels = ${currentValue} `,
