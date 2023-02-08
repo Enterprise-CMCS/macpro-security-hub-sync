@@ -22,7 +22,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_TO_ASSUME }}
           aws-region: us-east-1
-      - name: npm install
+      - run: npm install
       - run: npm run coverage
       - name: publish test coverage to code climate
         if: always() && env.CC_TEST_REPORTER_ID != ''
