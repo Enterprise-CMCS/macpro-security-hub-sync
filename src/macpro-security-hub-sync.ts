@@ -13,6 +13,7 @@ export class SecurityHubJiraSync {
   private readonly securityHub: SecurityHub;
   private readonly customJiraFields;
   private readonly region;
+  private readonly project;
   constructor(options: SecurityHubJiraSyncOptions = {}) {
     const {
       region = "us-east-1",
@@ -21,16 +22,18 @@ export class SecurityHubJiraSync {
     } = options;
     this.securityHub = new SecurityHub({ region, severities });
     this.region = region;
+    this.project = process.env.PROJECT || "security-hub:no-project-specified"; // This is the application project name that is used as a label, not the Jira Project name
     this.jira = new Jira();
     this.customJiraFields = customJiraFields;
   }
 
   async sync() {
     // Step 0. Gather and set some information that will be used throughout this function
+    // I think this should probably be in the constructor?
     const accountId = await this.getAWSAccountID();
     const identifyingLabels: string[] = [
-      accountId || "",
-      process.env.PROJECT || "",
+      accountId,
+      this.project,
       this.region,
     ];
 
@@ -61,7 +64,11 @@ export class SecurityHubJiraSync {
     });
     const command = new GetCallerIdentityCommand({});
     const response = await client.send(command);
-    return response.Account;
+    let accountID:string = response.Account || "";
+    if (!accountID.match("[0-9]{12}")) {
+      throw "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue.";
+    }
+    return accountID;
   }
 
   async closeIssuesForResolvedFindings(
