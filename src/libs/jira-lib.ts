@@ -47,7 +47,6 @@ export class Jira {
   async getAllSecurityHubIssuesInJiraProject(
     identifyingLabels: string[]
   ): Promise<IssueObject[]> {
-    // think reduce not map
     const labelQuery = identifyingLabels.reduce(
       (accumulator, currentValue) =>
         accumulator + `AND labels = ${currentValue} `,
