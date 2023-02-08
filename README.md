@@ -27,23 +27,6 @@
   </a>
 </p>
 
-## Overview
-
-This package syncs AWS Security Hub Findings to Jira.
-
-- When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 Jira Issue created.
-- By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
-- When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
-
-## Sync Process
-
-The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
-
-1. Get all open Security Hub issues (identified by a label convention) from Jira
-2. Get all current findings from Security Hub
-3. Close existing Jira issues if their finding is no longer active/current
-4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
-
 ## Usage
 
 Install to your project with your packager manager of choice, likely as a dev dependency:
@@ -77,7 +60,26 @@ await new SecurityHubJiraSync({
 }).sync();
 ```
 
-## Instructions to test locally with a yarn project
+## Info
+
+### Overview
+
+This package syncs AWS Security Hub Findings to Jira.
+
+- When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 Jira Issue created.
+- By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
+- When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
+
+### Sync Process
+
+The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
+
+1. Get all open Security Hub issues (identified by a label convention) from Jira
+2. Get all current findings from Security Hub
+3. Close existing Jira issues if their finding is no longer active/current
+4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
+
+### Instructions to test locally with a yarn project
 
 - in your terminal from your local clone of macpro-security-hub-sync with your development branch
 - `yarn link` (note, when testing is complete, run `yarn unlink`)
