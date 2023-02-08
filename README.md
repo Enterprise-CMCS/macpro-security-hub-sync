@@ -1,6 +1,9 @@
 <h1 align="center" style="border-bottom: none;">macpro-security-hub-sync</h1>
 <h3 align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
 <p align="center">
+  <a href="https://cmsgov.slack.com/archives/C04MBTV136X">
+    <img alt="Slack" src="https://img.shields.io/badge/Slack-channel-purple.svg">
+  </a>
   <a href="https://github.com/Enterprise-CMCS/macpro-security-hub-sync/releases/latest">
     <img alt="latest release" src="https://img.shields.io/github/release/Enterprise-CMCS/macpro-security-hub-sync.svg">
   </a>
@@ -24,7 +27,46 @@
   </a>
 </p>
 
-## Information
+## Usage
+
+Set a few enviroment variables that are expected by the package:
+
+```
+export JIRA_HOST=yourorg.atlassian.net
+export JIRA_PROJECT=OY2 // This is the ID for the Jira Project you want to interact with
+export JIRA_USERNAME="myuser@example.com"
+export JIRA_TOKEN="a very long string" // This should be a [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) that you generate
+```
+
+Install the package with a dependency manager of your choice, probably as a dev dependency:
+
+```
+npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
+```
+
+Import the package and execute a sync:
+
+```
+import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
+await new SecurityHubJiraSync().sync();
+```
+
+Or, override defaults by passing more options:
+
+```
+await new SecurityHubJiraSync({
+  region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
+  severities: ["HIGH","CRITICAL"], // List of all severities to find; default is ["MEDIUM","HIGH","CRITICAL"]
+  customJiraFields: { // A map of custom fields to add to each Jira Issue; no default; making this nicer is WIP
+    customfield_14117: [{value: "Platform Team"}],
+    customfield_14151: [{value: "Not Applicable "}],
+  }
+}).sync();
+```
+
+## Info
+
+#### Overview
 
 This package syncs AWS Security Hub Findings to Jira.
 
@@ -32,45 +74,16 @@ This package syncs AWS Security Hub Findings to Jira.
 - By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
 - When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
 
-## Synchronization Process
+#### Sync Process
 
 The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
-Step 1. Get all open Security Hub issues from Jira
-Step 2. Get all current findings from Security Hub
-Step 3. Close existing Jira issues if their finding is no longer active/current
-Step 4. Create Jira issue for current findings that do not already have a Jira issue
 
-## Usage and Getting Started
+1. Get all open Security Hub issues (identified by a label convention) from Jira
+2. Get all current findings from Security Hub
+3. Close existing Jira issues if their finding is no longer active/current
+4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
 
-To install the package run the following command:
-
-```
-npm install --save-dev @enterprise-cmcs/macpro-security-hub-sync
-```
-
-or
-
-```
-yarn add --dev @enterprise-cmcs/macpro-security-hub-sync
-```
-
-After installing the package in your project include this import statement
-
-```
-import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
-```
-
-With SecurityHubJiraSync imported you can now execute it like:
-
-```
-await new SecurityHubJiraSync({ region = "us-east-1", severities: ["MEDIUM"] }).sync();
-```
-
-## Contributing
-
-Found a bug, want to help with updating the docs or maybe you want to help add a feature. Refer to our contribution documentation for more information: [Documentation](./docs/CONTRIBUTING.MD)
-
-## Instructions to test locally with a yarn project
+#### Instructions to test locally with a yarn project
 
 - in your terminal from your local clone of macpro-security-hub-sync with your development branch
 - `yarn link` (note, when testing is complete, run `yarn unlink`)
@@ -103,8 +116,14 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 - `yarn install`
 - Note: when testing is complete run `yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"`
 
+## Contributing
+
+You can check out our current open issues [here](https://github.com/Enterprise-CMCS/macpro-security-hub-sync/issues). Please feel free to open new issues for bugs or enhancements.
+
+Also, join us on [Slack](https://cmsgov.slack.com/archives/C04MBTV136X)
+
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
 
 See [LICENSE](LICENSE) for full details.

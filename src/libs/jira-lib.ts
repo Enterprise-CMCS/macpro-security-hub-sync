@@ -1,18 +1,15 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
-import { Logger } from "./error-lib";
 
 dotenv.config();
 
 export class Jira {
   private readonly jira;
   jiraClosedStatuses: string[];
-  project: string;
 
   constructor() {
     Jira.checkEnvVars();
 
-    this.project = process.env.PROJECT ?? "";
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",")
       : ["Done"];
@@ -34,7 +31,6 @@ export class Jira {
       "JIRA_USERNAME",
       "JIRA_TOKEN",
       "JIRA_PROJECT",
-      "PROJECT",
     ];
     const missingEnvVars = requiredEnvVars.filter(
       (envVar) => !process.env[envVar]
@@ -47,35 +43,46 @@ export class Jira {
     }
   }
 
-  async getAllSecurityHubIssuesInJiraProject(): Promise<IssueObject[]> {
+  async getAllSecurityHubIssuesInJiraProject(
+    identifyingLabels: string[]
+  ): Promise<IssueObject[]> {
+    const labelQuery = identifyingLabels.reduce(
+      (accumulator, currentValue) =>
+        accumulator + `AND labels = ${currentValue} `,
+      ""
+    );
     const searchOptions: JiraClient.SearchQuery = {};
-    const query = `project = ${process.env.JIRA_PROJECT} AND labels = ${
-      this.project
-    } AND labels = security-hub AND status not in ("${this.jiraClosedStatuses.join(
+    const query = `project = ${
+      process.env.JIRA_PROJECT
+    } AND labels = security-hub ${labelQuery} AND status not in ("${this.jiraClosedStatuses.join(
       '","'
     )}")`;
 
     let totalIssuesReceived = 0;
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
-
     do {
+      // We  want to do everything possible to prevent matching tickets that we shouldn't
+      if (!query.includes("AND labels = security-hub ")) {
+        throw "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue";
+      }
+      if (!query.match(" AND labels = [0-9]{12}")) {
+        throw "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue";
+      }
+
       results = await this.jira.searchJira(query, searchOptions);
       allIssues = allIssues.concat(results.issues);
       totalIssuesReceived += results.issues.length;
       searchOptions.startAt = totalIssuesReceived;
     } while (totalIssuesReceived < results.total);
-
     return allIssues;
   }
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       console.log("Creating Jira issue.");
-      issue.fields.project = { key: process.env.JIRA_PROJECT };
 
-      // add aditional labels
-      issue.fields.labels.push(this.project);
+      issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const response = await this.jira.addNewIssue(issue);
       response[
@@ -92,12 +99,10 @@ export class Jira {
     if (!issueKey) return;
     try {
       console.log("need to close jira issue:", issueKey);
-
       const transitions = await this.jira.listTransitions(issueKey);
       const doneTransition = transitions.transitions.find(
         (t: { name: string }) => t.name === "Done"
       );
-      const doneTransitionId = doneTransition ? doneTransition.id : undefined;
 
       if (!doneTransition) {
         console.error(`Cannot find "Done" transition for issue ${issueKey}`);

@@ -4,8 +4,8 @@ import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
   GetFindingsCommand,
-  AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 import JiraClient from "jira-client";
 import sinon from "sinon";
@@ -49,6 +49,7 @@ const getFindingsCommandResponse = {
 
 const iamClient = mockClient(IAMClient);
 const sHClient = mockClient(SecurityHubClient);
+const stsClient = mockClient(STSClient);
 const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
 searchJiraStub.resolves(searchJiraResponse);
 const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
@@ -77,6 +78,10 @@ beforeEach(() => {
   iamClient
     .on(ListAccountAliasesCommand, {})
     .resolves(listAccountAliasesResponse);
+  stsClient.reset();
+  stsClient.on(GetCallerIdentityCommand, {}).resolves({
+    Account: "012345678901",
+  });
   searchJiraStub.resetBehavior();
   searchJiraStub.resolves(searchJiraResponse);
   addNewIssueJiraStub.resetBehavior();
@@ -86,7 +91,6 @@ beforeEach(() => {
   process.env.JIRA_TOKEN = "test";
   process.env.JIRA_PROJECT = "test";
   process.env.JIRA_CLOSED_STATUSES = "test";
-  process.env.PROJECT = "test";
 });
 
 describe("SecurityHubJiraSync", () => {
@@ -116,9 +120,9 @@ describe("SecurityHubJiraSync", () => {
   });
 
   it("Missing a required environment variable", () => {
-    delete process.env.PROJECT;
+    delete process.env.JIRA_PROJECT;
     expect(() => new Jira()).toThrow(
-      "Missing required environment variables: PROJECT"
+      "Missing required environment variables: JIRA_PROJECT"
     );
   });
 });
