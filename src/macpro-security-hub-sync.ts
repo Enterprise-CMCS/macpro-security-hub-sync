@@ -27,7 +27,6 @@ export class SecurityHubJiraSync {
 
   async sync() {
     // Step 0. Gather and set some information that will be used throughout this function
-    // I think this should probably be in the constructor?
     const accountId = await this.getAWSAccountID();
     const identifyingLabels: string[] = [accountId, this.region];
 
