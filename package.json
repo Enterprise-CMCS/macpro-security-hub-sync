@@ -28,7 +28,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-iam": "^3.259.0",
-    "@aws-sdk/client-securityhub": "^3.257.0",
+    "@aws-sdk/client-securityhub": "^3.264.0",
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
     "@types/jira-client": "^7.1.6",
