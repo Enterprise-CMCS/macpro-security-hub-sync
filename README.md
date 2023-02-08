@@ -38,6 +38,7 @@ This package syncs AWS Security Hub Findings to Jira.
 ## Sync Process
 
 The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
+
 1. Get all open Security Hub issues (identified by a label convention) from Jira
 2. Get all current findings from Security Hub
 3. Close existing Jira issues if their finding is no longer active/current
@@ -45,42 +46,35 @@ The SecurityHubJiraSyncOptions class's main function is sync. The sync process f
 
 ## Usage
 
-To install the package run the following command:
+Install to your project with your packager manager of choice, likely as a dev dependency:
 
 ```
-npm install @enterprise-cmcs/macpro-security-hub-sync
+npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
 ```
 
-or
-
-```
-yarn add @enterprise-cmcs/macpro-security-hub-sync
-```
-
-After installing the package in your project include this import statement
+Import the package:
 
 ```
 import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 ```
 
-With SecurityHubJiraSync imported you can now execute it like:
+Use the package to perform a sync; a sync with defaults shown below:
 
 ```
 await new SecurityHubJiraSync().sync();
 ```
 
-Or, you can initialize and run it with more options:
+Or, override defaults by passing more options:
 
 ```
 await new SecurityHubJiraSync({
-      region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
-      severities: ["CRITICAL", "HIGH", "MEDIUM"], // List of all severities to find; default is ["CRITICAL", "HIGH"]
-      customJiraFields: { // A map of custom fields to add to each Jira Issue; no default; making this nicer is WIP
-        customfield_14117: [{value: "Platform Team"}],
-        customfield_14151: [{value: "Not Applicable "}],
-      }
-  }).sync();
-}
+  region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
+  severities: ["CRITICAL", "HIGH", "MEDIUM"], // List of all severities to find; default is ["CRITICAL", "HIGH"]
+  customJiraFields: { // A map of custom fields to add to each Jira Issue; no default; making this nicer is WIP
+    customfield_14117: [{value: "Platform Team"}],
+    customfield_14151: [{value: "Not Applicable "}],
+  }
+}).sync();
 ```
 
 ## Instructions to test locally with a yarn project
