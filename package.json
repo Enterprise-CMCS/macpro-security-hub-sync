@@ -53,6 +53,7 @@
   "dependencies": {
     "@aws-sdk/client-iam": "^3.266.0",
     "@aws-sdk/client-securityhub": "^3.266.0",
+    "@aws-sdk/client-sts": "^3.266.1",
     "@types/jira-client": "^7.1.6",
     "dotenv": "^16.0.3",
     "jira-client": "^8.2.2"
