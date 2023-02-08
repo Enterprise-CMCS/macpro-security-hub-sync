@@ -7,6 +7,9 @@
   <a href="https://www.npmjs.com/package/@enterprise-cmcs/macpro-security-hub-sync">
     <img alt="npm latest version" src="https://img.shields.io/npm/v/@enterprise-cmcs/macpro-security-hub-sync/latest.svg">
   </a>
+  <a href="https://cmsgov.slack.com/archives/C04MBTV136X">
+    <img alt="Slack" src="https://img.shields.io/badge/Slack-channel-purple.svg">
+  </a>
   <a href="https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/maintainability">
     <img src="https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/maintainability" />
   </a>
@@ -45,13 +48,13 @@ Step 4. Create Jira issue for current findings that do not already have a Jira i
 To install the package run the following command:
 
 ```
-npm install --save-dev @enterprise-cmcs/macpro-security-hub-sync
+npm install @enterprise-cmcs/macpro-security-hub-sync
 ```
 
 or
 
 ```
-yarn add --dev @enterprise-cmcs/macpro-security-hub-sync
+yarn add @enterprise-cmcs/macpro-security-hub-sync
 ```
 
 After installing the package in your project include this import statement
@@ -63,12 +66,28 @@ import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 With SecurityHubJiraSync imported you can now execute it like:
 
 ```
-await new SecurityHubJiraSync({ region = "us-east-1", severities: ["MEDIUM"] }).sync();
+await new SecurityHubJiraSync().sync();
+```
+
+Or, you can initialize and run it with more options:
+
+```
+await new SecurityHubJiraSync({
+      region: "us-west-2", // Which regional Security Hub to scrape
+      severities: ["CRITICAL", "HIGH", "MEDIUM"], // Inclusive list of all severities to find
+      customJiraFields: { // A map of custom fields to add to each Jira Issue; making this nicer is WIP
+        customfield_14117: [{value: "Platform Team"}],
+        customfield_14151: [{value: "Not Applicable "}],
+      }
+  }).sync();
+}
 ```
 
 ## Contributing
 
-Found a bug, want to help with updating the docs or maybe you want to help add a feature. Refer to our contribution documentation for more information: [Documentation](./docs/CONTRIBUTING.MD)
+You can check out our current open issues [here](https://github.com/Enterprise-CMCS/macpro-security-hub-sync/issues). Please feel free to open new issues for bugs or enhancements.
+
+Also, join us on [Slack](https://cmsgov.slack.com/archives/C04MBTV136X)
 
 ## Instructions to test locally with a yarn project
 
@@ -105,6 +124,6 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
 
 See [LICENSE](LICENSE) for full details.
