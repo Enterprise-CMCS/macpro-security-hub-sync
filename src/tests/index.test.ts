@@ -6,6 +6,7 @@ import {
   GetFindingsCommand,
   AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 import JiraClient from "jira-client";
 import sinon from "sinon";
@@ -49,6 +50,7 @@ const getFindingsCommandResponse = {
 
 const iamClient = mockClient(IAMClient);
 const sHClient = mockClient(SecurityHubClient);
+const stsClient = mockClient(STSClient);
 const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
 searchJiraStub.resolves(searchJiraResponse);
 const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
@@ -77,6 +79,10 @@ beforeEach(() => {
   iamClient
     .on(ListAccountAliasesCommand, {})
     .resolves(listAccountAliasesResponse);
+  stsClient.reset();
+  stsClient.on(GetCallerIdentityCommand, {}).resolves({
+    Account: "012345678901",
+  });
   searchJiraStub.resetBehavior();
   searchJiraStub.resolves(searchJiraResponse);
   addNewIssueJiraStub.resetBehavior();
