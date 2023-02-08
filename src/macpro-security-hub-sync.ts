@@ -81,11 +81,6 @@ export class SecurityHubJiraSync {
         await this.jira.closeIssue(jiraIssues[i].key);
       }
     }
-    // jiraIssues.forEach((issue) => {
-    //   if (!expectedJiraIssueTitles.includes(issue.fields.summary)) {
-    //     await this.jira.closeIssue(issue.key);
-    //   }
-    // });
   }
 
   createIssueBody(finding: SecurityHubFinding) {
