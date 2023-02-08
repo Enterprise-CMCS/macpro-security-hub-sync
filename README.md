@@ -72,7 +72,7 @@ The SecurityHubJiraSyncOptions class's main function is sync. The sync process f
 3. Close existing Jira issues if their finding is no longer active/current
 4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
 
-### Instructions to test locally with a yarn project
+#### Instructions to test locally with a yarn project
 
 - in your terminal from your local clone of macpro-security-hub-sync with your development branch
 - `yarn link` (note, when testing is complete, run `yarn unlink`)
