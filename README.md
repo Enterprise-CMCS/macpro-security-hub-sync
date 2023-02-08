@@ -29,21 +29,14 @@
 
 ## Usage
 
-Install to your project with your packager manager of choice, likely as a dev dependency:
+Install, import, and execute a sync:
 
 ```
 npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
-```
 
-Import the package:
+...
 
-```
 import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
-```
-
-Use the package to perform a sync; a sync with defaults shown below:
-
-```
 await new SecurityHubJiraSync().sync();
 ```
 

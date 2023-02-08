@@ -83,7 +83,7 @@ export class Jira {
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       console.log("Creating Jira issue.");
-      
+
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const response = await this.jira.addNewIssue(issue);
