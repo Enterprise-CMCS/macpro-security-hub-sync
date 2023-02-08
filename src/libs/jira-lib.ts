@@ -46,15 +46,20 @@ export class Jira {
     }
   }
 
-  async getAllSecurityHubIssuesInJiraProject(identifyingLabels:string[]): Promise<IssueObject[]> {
+  async getAllSecurityHubIssuesInJiraProject(
+    identifyingLabels: string[]
+  ): Promise<IssueObject[]> {
     // think reduce not map
-    console.log(identifyingLabels)
+    console.log(identifyingLabels);
     const labelQuery = identifyingLabels.reduce(
-      (accumulator, currentValue) => accumulator + `AND labels = ${currentValue} `,
+      (accumulator, currentValue) =>
+        accumulator + `AND labels = ${currentValue} `,
       ""
     );
     const searchOptions: JiraClient.SearchQuery = {};
-    const query = `project = ${process.env.JIRA_PROJECT} AND labels = security-hub ${labelQuery} AND status not in ("${this.jiraClosedStatuses.join(
+    const query = `project = ${
+      process.env.JIRA_PROJECT
+    } AND labels = security-hub ${labelQuery} AND status not in ("${this.jiraClosedStatuses.join(
       '","'
     )}")`;
 
@@ -63,10 +68,10 @@ export class Jira {
     let results: JiraClient.JsonResponse;
     do {
       // We  want to do everything possible to prevent matching tickets that we shouldn't
-      if(!query.includes("AND labels = security-hub ")) {
+      if (!query.includes("AND labels = security-hub ")) {
         throw "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue";
       }
-      if(!query.match(" AND labels = [0-9]{12}")) {
+      if (!query.match(" AND labels = [0-9]{12}")) {
         throw "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue";
       }
 

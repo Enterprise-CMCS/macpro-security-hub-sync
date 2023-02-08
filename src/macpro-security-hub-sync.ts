@@ -5,7 +5,7 @@ import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 interface SecurityHubJiraSyncOptions {
   region?: string;
   severities?: string[];
-  customJiraFields?: { [id: string] : any; };
+  customJiraFields?: { [id: string]: any };
 }
 
 export class SecurityHubJiraSync {
@@ -14,7 +14,11 @@ export class SecurityHubJiraSync {
   private readonly customJiraFields;
   private readonly region;
   constructor(options: SecurityHubJiraSyncOptions = {}) {
-    const { region = "us-east-1", severities = ["HIGH", "CRITICAL"], customJiraFields = {} } = options;
+    const {
+      region = "us-east-1",
+      severities = ["HIGH", "CRITICAL"],
+      customJiraFields = {},
+    } = options;
     this.securityHub = new SecurityHub({ region, severities });
     this.region = region;
     this.jira = new Jira();
@@ -24,14 +28,16 @@ export class SecurityHubJiraSync {
   async sync() {
     // Step 0. Gather and set some information that will be used throughout this function
     const accountId = await this.getAWSAccountID();
-    const identifyingLabels:string[] = [
+    const identifyingLabels: string[] = [
       accountId || "",
       process.env.PROJECT || "",
       this.region,
     ];
 
     // Step 1. Get all open Security Hub issues from Jira
-    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(identifyingLabels);
+    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
+      identifyingLabels
+    );
     // console.log(
     //   "all current statuses on security hub issues:",
     //   new Set(jiraIssues.map((i) => i.fields.status.name))
@@ -42,7 +48,11 @@ export class SecurityHubJiraSync {
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     await this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
-    this.createJiraIssuesForNewFindings(jiraIssues, shFindings, identifyingLabels);
+    this.createJiraIssuesForNewFindings(
+      jiraIssues,
+      shFindings,
+      identifyingLabels
+    );
   }
 
   async getAWSAccountID() {
@@ -65,7 +75,7 @@ export class SecurityHubJiraSync {
     );
 
     // close all security-hub labeled Jira issues that do not have an active finding
-    for(var i=0; i<jiraIssues.length; i++){
+    for (var i = 0; i < jiraIssues.length; i++) {
       if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
         await this.jira.closeIssue(jiraIssues[i].key);
       }
@@ -152,7 +162,10 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  async createJiraIssueFromFinding(finding: SecurityHubFinding, identifyingLabels: string[]) {
+  async createJiraIssueFromFinding(
+    finding: SecurityHubFinding,
+    identifyingLabels: string[]
+  ) {
     const newIssueData = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,
@@ -162,7 +175,7 @@ export class SecurityHubJiraSync {
           "security-hub",
           finding.severity,
           finding.accountAlias,
-          ...identifyingLabels
+          ...identifyingLabels,
         ],
         ...this.customJiraFields,
       },
@@ -174,7 +187,7 @@ export class SecurityHubJiraSync {
   createJiraIssuesForNewFindings(
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[],
-    identifyingLabels: string[],
+    identifyingLabels: string[]
   ) {
     const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
     const uniqueSecurityHubFindings = [
@@ -188,6 +201,8 @@ export class SecurityHubJiraSync {
             `SecurityHub Finding - ${finding.title}`
           )
       )
-      .forEach((finding) => this.createJiraIssueFromFinding(finding, identifyingLabels));
+      .forEach((finding) =>
+        this.createJiraIssueFromFinding(finding, identifyingLabels)
+      );
   }
 }
