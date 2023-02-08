@@ -62,7 +62,7 @@ await new SecurityHubJiraSync({
 
 ## Info
 
-### Overview
+#### Overview
 
 This package syncs AWS Security Hub Findings to Jira.
 
@@ -70,7 +70,7 @@ This package syncs AWS Security Hub Findings to Jira.
 - By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
 - When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
 
-### Sync Process
+#### Sync Process
 
 The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
 
