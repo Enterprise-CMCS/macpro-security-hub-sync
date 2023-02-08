@@ -1,14 +1,14 @@
 <h1 align="center" style="border-bottom: none;">macpro-security-hub-sync</h1>
 <h3 align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
 <p align="center">
+  <a href="https://cmsgov.slack.com/archives/C04MBTV136X">
+    <img alt="Slack" src="https://img.shields.io/badge/Slack-channel-purple.svg">
+  </a>
   <a href="https://github.com/Enterprise-CMCS/macpro-security-hub-sync/releases/latest">
     <img alt="latest release" src="https://img.shields.io/github/release/Enterprise-CMCS/macpro-security-hub-sync.svg">
   </a>
   <a href="https://www.npmjs.com/package/@enterprise-cmcs/macpro-security-hub-sync">
     <img alt="npm latest version" src="https://img.shields.io/npm/v/@enterprise-cmcs/macpro-security-hub-sync/latest.svg">
-  </a>
-  <a href="https://cmsgov.slack.com/archives/C04MBTV136X">
-    <img alt="Slack" src="https://img.shields.io/badge/Slack-channel-purple.svg">
   </a>
   <a href="https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/maintainability">
     <img src="https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/maintainability" />
@@ -38,10 +38,10 @@ This package syncs AWS Security Hub Findings to Jira.
 ## Synchronization Process
 
 The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
-Step 1. Get all open Security Hub issues from Jira
-Step 2. Get all current findings from Security Hub
-Step 3. Close existing Jira issues if their finding is no longer active/current
-Step 4. Create Jira issue for current findings that do not already have a Jira issue
+1. Get all open Security Hub issues from Jira
+2. Get all current findings from Security Hub
+3. Close existing Jira issues if their finding is no longer active/current
+4. Create Jira issue for current findings that do not already have a Jira issue
 
 ## Usage and Getting Started
 
