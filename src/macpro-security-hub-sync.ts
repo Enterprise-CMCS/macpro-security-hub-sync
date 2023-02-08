@@ -44,7 +44,7 @@ export class SecurityHubJiraSync {
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     await this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
-    this.createJiraIssuesForNewFindings(
+    await this.createJiraIssuesForNewFindings(
       jiraIssues,
       shFindings,
       identifyingLabels
