@@ -118,9 +118,10 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 
 ## Contributing
 
-You can check out our current open issues [here](https://github.com/Enterprise-CMCS/macpro-security-hub-sync/issues). Please feel free to open new issues for bugs or enhancements.
+Work items for this project are tracked in Jira. Check out the [project kanban board](https://qmacbis.atlassian.net/jira/software/c/projects/OY2/boards/251) to view all work items affecting this repo.
 
-Also, join us on [Slack](https://cmsgov.slack.com/archives/C04MBTV136X)
+If you don't have access to Jira, would like access to Jira, or would like to drop us an idea without pursuing Jira access, please visit the [slack channel](https://cmsgov.slack.com/archives/C04MBTV136X).
+
 
 ## License
 
