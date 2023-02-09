@@ -172,7 +172,7 @@ export class SecurityHubJiraSync {
           finding.accountAlias,
           ...identifyingLabels,
         ],
-        ...this.customJiraFields,
+        customJiraFields: this.customJiraFields,
       },
     };
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
