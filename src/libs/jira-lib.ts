@@ -5,6 +5,7 @@ dotenv.config();
 
 export class Jira {
   private readonly jira;
+  private jiraFields: JiraClient.FieldObject[] | undefined;
   jiraClosedStatuses: string[];
 
   constructor() {
@@ -84,6 +85,12 @@ export class Jira {
 
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
+      if (issue.customJiraFields) {
+        issue.fields = {
+          ...issue.fields,
+          ...(await this.mapCustomFieldNamesToIds(issue.customJiraFields)),
+        };
+      }
       const response = await this.jira.addNewIssue(issue);
       response[
         "webUrl"
@@ -118,5 +125,32 @@ export class Jira {
         `Failed to transition issue ${issueKey} to "Done": ${error}`
       );
     }
+  }
+
+  async mapCustomFieldNamesToIds(customJiraFields: {
+    [fieldName: string]: any;
+  }) {
+    if (!this.jiraFields) {
+      try {
+        this.jiraFields = await this.jira.listFields();
+      } catch (error) {
+        throw new Error("Failed to retrieve Jira Fields");
+      }
+    }
+    const mappedFields = Object.entries(customJiraFields).reduce(
+      (acc: { [key: string]: [{ value: string }] }, [fieldName, value]) => {
+        const customField = this.jiraFields!.find(
+          (field) => field.name === fieldName
+        );
+        if (!customField) {
+          throw new Error(`Cannot find custom field named "${fieldName}"`);
+        }
+        acc[customField.id] = value;
+        return acc;
+      },
+      {}
+    );
+
+    return mappedFields;
   }
 }
