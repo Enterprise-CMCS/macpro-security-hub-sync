@@ -85,14 +85,11 @@ export class Jira {
 
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
-      if (issue.fields.customJiraFields) {
+      if (issue.customJiraFields) {
         issue.fields = {
           ...issue.fields,
-          ...(await this.mapCustomFieldNamesToIds(
-            issue.fields.customJiraFields
-          )),
+          ...(await this.mapCustomFieldNamesToIds(issue.customJiraFields)),
         };
-        delete issue.fields.customJiraFields;
       }
       const response = await this.jira.addNewIssue(issue);
       response[
@@ -131,7 +128,7 @@ export class Jira {
   }
 
   async mapCustomFieldNamesToIds(customJiraFields: {
-    [fieldName: string]: string;
+    [fieldName: string]: any;
   }) {
     if (!this.jiraFields) {
       try {
@@ -148,7 +145,7 @@ export class Jira {
         if (!customField) {
           throw new Error(`Cannot find custom field named "${fieldName}"`);
         }
-        acc[customField.id] = [{ value }];
+        acc[customField.id] = value;
         return acc;
       },
       {}
