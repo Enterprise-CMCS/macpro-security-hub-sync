@@ -17,7 +17,7 @@ export class SecurityHubJiraSync {
     const {
       region = "us-east-1",
       severities = ["MEDIUM", "HIGH", "CRITICAL"],
-      customJiraFields
+      customJiraFields,
     } = options;
     this.securityHub = new SecurityHub({ region, severities });
     this.region = region;
