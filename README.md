@@ -57,9 +57,9 @@ Or, override defaults by passing more options:
 await new SecurityHubJiraSync({
   region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
   severities: ["HIGH","CRITICAL"], // List of all severities to find; default is ["MEDIUM","HIGH","CRITICAL"]
-  customJiraFields: { // A map of custom fields to add to each Jira Issue; no default; making this nicer is WIP
-    customfield_14117: [{value: "Platform Team"}],
-    customfield_14151: [{value: "Not Applicable "}],
+  customJiraFields: { // A map of custom fields to add to each Jira Issue; no default.
+    "Working Team": [{value: "Platform Team"}],
+    "Product Supported": [{value: "Not Applicable "}],
   }
 }).sync();
 ```
