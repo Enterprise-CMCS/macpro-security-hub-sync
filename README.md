@@ -122,7 +122,6 @@ Work items for this project are tracked in Jira. Check out the [project kanban b
 
 If you don't have access to Jira, would like access to Jira, or would like to drop us an idea without pursuing Jira access, please visit the [slack channel](https://cmsgov.slack.com/archives/C04MBTV136X).
 
-
 ## License
 
 [![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
