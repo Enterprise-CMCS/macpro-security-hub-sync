@@ -17,7 +17,7 @@ export class SecurityHubJiraSync {
     const {
       region = "us-east-1",
       severities = ["MEDIUM", "HIGH", "CRITICAL"],
-      customJiraFields,
+      customJiraFields = {},
     } = options;
     this.securityHub = new SecurityHub({ region, severities });
     this.region = region;
@@ -172,8 +172,8 @@ export class SecurityHubJiraSync {
           finding.accountAlias,
           ...identifyingLabels,
         ],
+        ...this.customJiraFields,
       },
-      customJiraFields: this.customJiraFields,
     };
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
     console.log("new Jira issue created:", newIssueInfo);

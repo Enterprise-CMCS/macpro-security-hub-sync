@@ -4,7 +4,7 @@ new SecurityHubJiraSync({
   region: "us-east-1",
   severities: ["CRITICAL", "HIGH"],
   customJiraFields: {
-    "Working Team": [{ value: "Dev Team" }],
-    "Product Supported": [{ value: "OneMac" }],
+    customfield_14117: [{ value: "Dev Team" }],
+    customfield_14151: [{ value: "OneMac" }],
   },
 }).sync();

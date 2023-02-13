@@ -32,7 +32,7 @@ export class SecurityHub {
       Comparison: "EQUALS",
       Value: severity,
     }));
-    this.getAccountAlias().catch((error) => console.log(error));
+    this.getAccountAlias().catch((error) => console.error(error));
   }
 
   private async getAccountAlias(): Promise<void> {
@@ -82,7 +82,7 @@ export class SecurityHub {
         return { accountAlias: this.accountAlias, ...finding };
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return [];
     }
   }

@@ -58,8 +58,8 @@ await new SecurityHubJiraSync({
   region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
   severities: ["HIGH","CRITICAL"], // List of all severities to find; default is ["MEDIUM","HIGH","CRITICAL"]
   customJiraFields: { // A map of custom fields to add to each Jira Issue; no default.
-    "Working Team": [{value: "Platform Team"}],
-    "Product Supported": [{value: "Not Applicable "}],
+    customfield_14117: [{value: "Platform Team"}],
+    customfield_14151: [{value: "Not Applicable "}],
   }
 }).sync();
 ```
@@ -121,7 +121,6 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 Work items for this project are tracked in Jira. Check out the [project kanban board](https://qmacbis.atlassian.net/jira/software/c/projects/OY2/boards/251) to view all work items affecting this repo.
 
 If you don't have access to Jira, would like access to Jira, or would like to drop us an idea without pursuing Jira access, please visit the [slack channel](https://cmsgov.slack.com/archives/C04MBTV136X).
-
 
 ## License
 
