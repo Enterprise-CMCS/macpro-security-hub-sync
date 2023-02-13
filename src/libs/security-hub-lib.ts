@@ -6,7 +6,6 @@ import {
   Remediation,
   AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
-import { Logger } from "./error-lib";
 
 export interface SecurityHubFinding {
   title?: string;
@@ -33,7 +32,7 @@ export class SecurityHub {
       Comparison: "EQUALS",
       Value: severity,
     }));
-    this.getAccountAlias().catch((error) => Logger.logError(error));
+    this.getAccountAlias().catch((error) => console.error(error));
   }
 
   private async getAccountAlias(): Promise<void> {
@@ -83,7 +82,7 @@ export class SecurityHub {
         return { accountAlias: this.accountAlias, ...finding };
       });
     } catch (error) {
-      Logger.logError(error as Error);
+      console.error(error);
       return [];
     }
   }
