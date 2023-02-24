@@ -6,6 +6,7 @@ interface SecurityHubJiraSyncOptions {
   region?: string;
   severities?: string[];
   customJiraFields?: { [id: string]: any };
+  epicKey?: string;
 }
 
 export class SecurityHubJiraSync {
@@ -13,6 +14,7 @@ export class SecurityHubJiraSync {
   private readonly securityHub: SecurityHub;
   private readonly customJiraFields;
   private readonly region;
+  private readonly epicKey;
   constructor(options: SecurityHubJiraSyncOptions = {}) {
     const {
       region = "us-east-1",
@@ -23,6 +25,7 @@ export class SecurityHubJiraSync {
     this.region = region;
     this.jira = new Jira();
     this.customJiraFields = customJiraFields;
+    this.epicKey = options.epicKey;
   }
 
   async sync() {
@@ -34,15 +37,13 @@ export class SecurityHubJiraSync {
     const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
       identifyingLabels
     );
-    // console.log(
-    //   "all current statuses on security hub issues:",
-    //   new Set(jiraIssues.map((i) => i.fields.status.name))
-    // );
 
     // Step 2. Get all current findings from Security Hub
     const shFindings = await this.securityHub.getAllActiveFindings();
+
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     await this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
+
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
     await this.createJiraIssuesForNewFindings(
       jiraIssues,
@@ -161,7 +162,7 @@ export class SecurityHubJiraSync {
     finding: SecurityHubFinding,
     identifyingLabels: string[]
   ) {
-    const newIssueData = {
+    const newIssueData: IssueObject = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,
         description: this.createIssueBody(finding),
@@ -175,8 +176,11 @@ export class SecurityHubJiraSync {
         ...this.customJiraFields,
       },
     };
+    if (this.epicKey) {
+      newIssueData.fields.parent = { key: this.epicKey };
+    }
     const newIssueInfo = await this.jira.createNewIssue(newIssueData);
-    console.log("new Jira issue created:", newIssueInfo);
+    console.log("New Jira issue created:", newIssueInfo);
   }
 
   createJiraIssuesForNewFindings(
