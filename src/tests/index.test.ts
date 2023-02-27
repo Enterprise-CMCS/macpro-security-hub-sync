@@ -16,7 +16,7 @@ import { Jira } from "../libs";
 const testAwsAccountId = "012345678901";
 const testProject = "testProject";
 const testStatus = "testStatus";
-const testRegion = "us-east-1";
+const testAwsRegion = "us-east-1";
 
 // ******** mock responses ********
 
@@ -78,8 +78,7 @@ sHClient
           ...getFindingsCommandResponse.Findings[0],
           ProductFields: {
             Title: "Test Finding",
-            StandardsControlArn:
-              "arn:aws:securityhub:us-east-1:0123456789012:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3",
+            StandardsControlArn: `arn:aws:securityhub:${testAwsRegion}:${testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
           },
         },
       ],
@@ -150,13 +149,13 @@ describe("SecurityHubJiraSync", () => {
   });
 
   it("creates the expected JQL query when searching for Jira issues", async () => {
-    const sync = new SecurityHubJiraSync({ region: testRegion });
+    const sync = new SecurityHubJiraSync({ region: testAwsRegion });
     await sync.sync();
     const actualQueryParts = searchJiraStub.getCall(0).args[0].split(" AND ");
     const expectedQueryParts = [
       `labels = 'security-hub'`,
       `labels = '${testAwsAccountId}'`,
-      `labels = '${testRegion}'`,
+      `labels = '${testAwsRegion}'`,
       `project = '${testProject}'`,
       `status not in ('${testStatus}')`,
     ];
