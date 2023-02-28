@@ -11,7 +11,9 @@ export class Jira {
     Jira.checkEnvVars();
 
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
-      ? process.env.JIRA_CLOSED_STATUSES.split(",")
+      ? process.env.JIRA_CLOSED_STATUSES.split(",").map((status) =>
+          status.trim()
+        )
       : ["Done"];
 
     this.jira = new JiraClient({
@@ -43,34 +45,41 @@ export class Jira {
     }
   }
 
+  private static formatLabelQuery(label: string): string {
+    return `labels = '${label}'`;
+  }
+
   async getAllSecurityHubIssuesInJiraProject(
     identifyingLabels: string[]
   ): Promise<IssueObject[]> {
-    const labelQuery = identifyingLabels.reduce(
-      (accumulator, currentValue) =>
-        accumulator + `AND labels = ${currentValue} `,
-      ""
+    const labelQueries = [...identifyingLabels, "security-hub"].map((label) =>
+      Jira.formatLabelQuery(label)
     );
-    const searchOptions: JiraClient.SearchQuery = {};
-    const query = `project = ${
-      process.env.JIRA_PROJECT
-    } AND labels = security-hub ${labelQuery} AND status not in ("${this.jiraClosedStatuses.join(
-      '","'
-    )}")`;
+    const projectQuery = `project = '${process.env.JIRA_PROJECT}'`;
+    const statusQuery = `status not in ('${this.jiraClosedStatuses.join(
+      "','" // wrap each closed status in single quotes
+    )}')`;
+    const fullQuery = [...labelQueries, projectQuery, statusQuery].join(
+      " AND "
+    );
+    // We  want to do everything possible to prevent matching tickets that we shouldn't
+    if (!fullQuery.includes(Jira.formatLabelQuery("security-hub"))) {
+      throw new Error(
+        "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue"
+      );
+    }
+    if (!fullQuery.match(Jira.formatLabelQuery("[0-9]{12}"))) {
+      throw new Error(
+        "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue"
+      );
+    }
 
     let totalIssuesReceived = 0;
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
+    const searchOptions: JiraClient.SearchQuery = {};
     do {
-      // We  want to do everything possible to prevent matching tickets that we shouldn't
-      if (!query.includes("AND labels = security-hub ")) {
-        throw "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue";
-      }
-      if (!query.match(" AND labels = [0-9]{12}")) {
-        throw "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue";
-      }
-
-      results = await this.jira.searchJira(query, searchOptions);
+      results = await this.jira.searchJira(fullQuery, searchOptions);
       allIssues = allIssues.concat(results.issues);
       totalIssuesReceived += results.issues.length;
       searchOptions.startAt = totalIssuesReceived;
@@ -80,7 +89,7 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      console.log("Creating Jira issue.");
+      console.log("Creating Jira issue");
 
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
@@ -98,7 +107,7 @@ export class Jira {
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
-      console.log("need to close jira issue:", issueKey);
+      console.log("Need to close Jira issue:", issueKey);
       const transitions = await this.jira.listTransitions(issueKey);
       const doneTransition = transitions.transitions.find(
         (t: { name: string }) => t.name === "Done"

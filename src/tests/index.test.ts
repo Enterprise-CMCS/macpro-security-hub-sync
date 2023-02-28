@@ -11,6 +11,15 @@ import JiraClient from "jira-client";
 import sinon from "sinon";
 import { Jira } from "../libs";
 
+// ******** constants ********
+
+const testAwsAccountId = "012345678901";
+const testProject = "testProject";
+const testStatus = "testStatus";
+const testAwsRegion = "us-east-1";
+
+// ******** mock responses ********
+
 const searchJiraResponse = {
   issues: [
     {
@@ -20,6 +29,7 @@ const searchJiraResponse = {
     },
   ],
 };
+
 const addNewIssueJiraResponse = {
   key: "TEST-15",
 };
@@ -47,13 +57,16 @@ const getFindingsCommandResponse = {
   $metadata: {},
 };
 
-const iamClient = mockClient(IAMClient);
-const sHClient = mockClient(SecurityHubClient);
-const stsClient = mockClient(STSClient);
-const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
-searchJiraStub.resolves(searchJiraResponse);
-const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
+// ******** mocks ********
 
+// IAM
+const iamClient = mockClient(IAMClient);
+iamClient
+  .on(ListAccountAliasesCommand, {})
+  .resolves(listAccountAliasesResponse);
+
+// Security Hub
+const sHClient = mockClient(SecurityHubClient);
 sHClient
   .on(GetFindingsCommand, {})
   .resolvesOnce({ ...getFindingsCommandResponse, NextToken: "test" })
@@ -65,49 +78,90 @@ sHClient
           ...getFindingsCommandResponse.Findings[0],
           ProductFields: {
             Title: "Test Finding",
-            StandardsControlArn:
-              "arn:aws:securityhub:us-east-1:0123456789012:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3",
+            StandardsControlArn: `arn:aws:securityhub:${testAwsRegion}:${testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
           },
         },
       ],
     },
   });
 
-beforeEach(() => {
-  iamClient.reset();
-  iamClient
-    .on(ListAccountAliasesCommand, {})
-    .resolves(listAccountAliasesResponse);
-  stsClient.reset();
-  stsClient.on(GetCallerIdentityCommand, {}).resolves({
-    Account: "012345678901",
-  });
-  searchJiraStub.resetBehavior();
-  searchJiraStub.resolves(searchJiraResponse);
-  addNewIssueJiraStub.resetBehavior();
-  addNewIssueJiraStub.resolves(addNewIssueJiraResponse);
-  process.env.JIRA_HOST = "test";
-  process.env.JIRA_USERNAME = "test";
-  process.env.JIRA_TOKEN = "test";
-  process.env.JIRA_PROJECT = "test";
-  process.env.JIRA_CLOSED_STATUSES = "test";
+// STS
+const stsClient = mockClient(STSClient);
+stsClient.on(GetCallerIdentityCommand, {}).resolves({
+  Account: testAwsAccountId,
 });
+
+// Jira
+const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
+searchJiraStub.resolves(searchJiraResponse);
+
+const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
+addNewIssueJiraStub.resolves(addNewIssueJiraResponse);
+
+// ******** setup ********
+
+process.env.JIRA_HOST = "testHost";
+process.env.JIRA_USERNAME = "testUsername";
+process.env.JIRA_TOKEN = "testToken";
+process.env.JIRA_PROJECT = testProject;
+process.env.JIRA_CLOSED_STATUSES = testStatus;
+
+beforeEach(() => {
+  iamClient.resetHistory();
+  stsClient.resetHistory();
+  searchJiraStub.resetHistory();
+  addNewIssueJiraStub.resetHistory();
+});
+
+// ******** tests ********
 
 describe("SecurityHubJiraSync", () => {
   it("jira returns search results", async () => {
     const jira = new JiraClient({ host: "" });
     const jqlString =
       'project = TEST AND labels = security-hub AND status not in ("Done")';
-
     const result = await jira.searchJira(jqlString, {});
     expect(result).toEqual(searchJiraResponse);
   });
 
   it("sync response", async () => {
-    const sync = new SecurityHubJiraSync();
+    const sync = new SecurityHubJiraSync({});
     const syncResult = await sync.sync();
-
     expect(syncResult).not.toBeDefined();
+  });
+
+  it("passes epic key when creating an issue", async () => {
+    const sync = new SecurityHubJiraSync({
+      epicKey: "ABCD-1234",
+    });
+    await sync.sync();
+    expect(addNewIssueJiraStub.getCall(0).args[0].fields.parent.key).toBe(
+      "ABCD-1234"
+    );
+  });
+
+  it("doesn't pass epic key if it isn't set", async () => {
+    const sync = new SecurityHubJiraSync({});
+    await sync.sync();
+    expect(
+      addNewIssueJiraStub.getCall(0).args[0].fields.parent
+    ).toBeUndefined();
+  });
+
+  it("creates the expected JQL query when searching for Jira issues", async () => {
+    const sync = new SecurityHubJiraSync({ region: testAwsRegion });
+    await sync.sync();
+    const actualQueryParts = searchJiraStub.getCall(0).args[0].split(" AND ");
+    const expectedQueryParts = [
+      `labels = 'security-hub'`,
+      `labels = '${testAwsAccountId}'`,
+      `labels = '${testAwsRegion}'`,
+      `project = '${testProject}'`,
+      `status not in ('${testStatus}')`,
+    ];
+    expect(actualQueryParts).toEqual(
+      expect.arrayContaining(expectedQueryParts)
+    );
   });
 
   it("Without JIRA_CLOSED_STATUSES environment variable", async () => {
