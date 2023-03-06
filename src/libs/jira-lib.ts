@@ -78,12 +78,18 @@ export class Jira {
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
     const searchOptions: JiraClient.SearchQuery = {};
-    do {
-      results = await this.jira.searchJira(fullQuery, searchOptions);
-      allIssues = allIssues.concat(results.issues);
-      totalIssuesReceived += results.issues.length;
-      searchOptions.startAt = totalIssuesReceived;
-    } while (totalIssuesReceived < results.total);
+    try {
+      do {
+        results = await this.jira.searchJira(fullQuery, searchOptions);
+        allIssues = allIssues.concat(results.issues);
+        totalIssuesReceived += results.issues.length;
+        searchOptions.startAt = totalIssuesReceived;
+      } while (totalIssuesReceived < results.total);
+    } catch (e: any) {
+      throw new Error(
+        `Error getting Security Hub issues from Jira: ${e.message}`
+      );
+    }
     return allIssues;
   }
 
@@ -98,9 +104,8 @@ export class Jira {
         "webUrl"
       ] = `https://${process.env.JIRA_HOST}/browse/${response.key}`;
       return response;
-    } catch (e) {
-      console.error("Error creating new issue:", e);
-      throw e;
+    } catch (e: any) {
+      throw new Error(`Error creating Jira issue: ${e.message}`);
     }
   }
 
@@ -114,18 +119,15 @@ export class Jira {
       );
 
       if (!doneTransition) {
-        console.error(`Cannot find "Done" transition for issue ${issueKey}`);
-        return;
+        throw new Error(`Cannot find "Done" transition for issue ${issueKey}`);
       }
 
       await this.jira.transitionIssue(issueKey, {
         transition: { id: doneTransition.id },
       });
       console.log(`Issue ${issueKey} has been transitioned to "Done"`);
-    } catch (error) {
-      console.error(
-        `Failed to transition issue ${issueKey} to "Done": ${error}`
-      );
+    } catch (e: any) {
+      throw new Error(`Error closing issue ${issueKey}: ${e.message}`);
     }
   }
 }

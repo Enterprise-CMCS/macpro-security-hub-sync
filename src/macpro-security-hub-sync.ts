@@ -57,10 +57,17 @@ export class SecurityHubJiraSync {
       region: this.region,
     });
     const command = new GetCallerIdentityCommand({});
-    const response = await client.send(command);
+    let response;
+    try {
+      response = await client.send(command);
+    } catch (e: any) {
+      throw new Error(`Error getting AWS Account ID: ${e.message}`);
+    }
     let accountID: string = response.Account || "";
     if (!accountID.match("[0-9]{12}")) {
-      throw "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue.";
+      throw new Error(
+        "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue."
+      );
     }
     return accountID;
   }
@@ -74,12 +81,17 @@ export class SecurityHubJiraSync {
         shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`)
       )
     );
-
-    // close all security-hub labeled Jira issues that do not have an active finding
-    for (var i = 0; i < jiraIssues.length; i++) {
-      if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
-        await this.jira.closeIssue(jiraIssues[i].key);
+    try {
+      // close all security-hub labeled Jira issues that do not have an active finding
+      for (var i = 0; i < jiraIssues.length; i++) {
+        if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
+          await this.jira.closeIssue(jiraIssues[i].key);
+        }
       }
+    } catch (e: any) {
+      throw new Error(
+        `Error closing Jira issue for resolved finding: ${e.message}`
+      );
     }
   }
 
@@ -179,7 +191,12 @@ export class SecurityHubJiraSync {
     if (this.epicKey) {
       newIssueData.fields.parent = { key: this.epicKey };
     }
-    const newIssueInfo = await this.jira.createNewIssue(newIssueData);
+    let newIssueInfo;
+    try {
+      newIssueInfo = await this.jira.createNewIssue(newIssueData);
+    } catch (e: any) {
+      throw new Error(`Error creating Jira issue from finding: ${e.message}`);
+    }
     console.log("New Jira issue created:", newIssueInfo);
   }
 
@@ -192,7 +209,6 @@ export class SecurityHubJiraSync {
     const uniqueSecurityHubFindings = [
       ...new Set(shFindings.map((finding) => JSON.stringify(finding))),
     ].map((finding) => JSON.parse(finding));
-
     uniqueSecurityHubFindings
       .filter(
         (finding) =>

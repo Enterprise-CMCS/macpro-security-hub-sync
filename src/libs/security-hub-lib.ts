@@ -81,9 +81,8 @@ export class SecurityHub {
       return Array.from(uniqueFindings).map((finding) => {
         return { accountAlias: this.accountAlias, ...finding };
       });
-    } catch (error) {
-      console.error(error);
-      return [];
+    } catch (e: any) {
+      throw new Error(`Error getting Security Hub findings: ${e.message}`);
     }
   }
 
