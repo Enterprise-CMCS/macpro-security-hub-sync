@@ -120,7 +120,7 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      console.log("Creating Jira issue");
+      // console.log("Creating Jira issue");
 
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
@@ -138,7 +138,6 @@ export class Jira {
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
-      console.log("Need to close Jira issue:", issueKey);
       const transitions = await this.jira.listTransitions(issueKey);
       const doneTransition = transitions.transitions.find(
         (t: { name: string }) => t.name === "Done"
@@ -151,7 +150,6 @@ export class Jira {
       await this.jira.transitionIssue(issueKey, {
         transition: { id: doneTransition.id },
       });
-      console.log(`Issue ${issueKey} has been transitioned to "Done"`);
     } catch (e: any) {
       throw new Error(`Error closing issue ${issueKey}: ${e.message}`);
     }
