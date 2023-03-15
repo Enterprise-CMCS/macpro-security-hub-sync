@@ -1,5 +1,6 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 
@@ -25,6 +26,30 @@ export class Jira {
       apiVersion: "2",
       strictSSL: true,
     });
+  }
+
+  async removeCurrentUserAsWatcher(issueKey: string) {
+    try {
+      const currentUser = await this.jira.getCurrentUser();
+      // console.log("currentUser is", currentUser);
+
+      // Remove the current user as a watcher
+      await axios({
+        method: "DELETE",
+        url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
+          ).toString("base64")}`,
+        },
+        params: {
+          accountId: currentUser.accountId,
+        },
+      });
+      // console.log("watcher removed:", issueKey);
+    } catch (err) {
+      console.error("Error creating issue or removing watcher:", err);
+    }
   }
 
   private static checkEnvVars(): void {
@@ -99,11 +124,12 @@ export class Jira {
 
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
-      const response = await this.jira.addNewIssue(issue);
-      response[
+      const newIssue = await this.jira.addNewIssue(issue);
+      newIssue[
         "webUrl"
-      ] = `https://${process.env.JIRA_HOST}/browse/${response.key}`;
-      return response;
+      ] = `https://${process.env.JIRA_HOST}/browse/${newIssue.key}`;
+      await this.removeCurrentUserAsWatcher(newIssue.key);
+      return newIssue;
     } catch (e: any) {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
