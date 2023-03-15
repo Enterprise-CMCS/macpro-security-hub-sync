@@ -104,6 +104,7 @@ export class SecurityHubJiraSync {
         } = {},
       } = {},
       title = "",
+      createdAt = "",
       description = "",
       accountAlias = "",
       awsAccountId = "",
@@ -126,6 +127,10 @@ export class SecurityHubJiraSync {
       h2. Title:
 
       ${title}
+
+      h2. Created At:
+
+      ${createdAt}
 
       h2. Description:
 
