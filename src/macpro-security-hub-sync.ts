@@ -170,6 +170,23 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
+  getPriorityNumber = (severity: string): number => {
+    switch (severity) {
+      case "INFORMATIONAL":
+        return 5;
+      case "LOW":
+        return 4;
+      case "MEDIUM":
+        return 3;
+      case "HIGH":
+        return 2;
+      case "CRITICAL":
+        return 1;
+      default:
+        throw new Error(`Invalid severity: ${severity}`);
+    }
+  };
+
   async createJiraIssueFromFinding(
     finding: SecurityHubFinding,
     identifyingLabels: string[]
@@ -185,6 +202,7 @@ export class SecurityHubJiraSync {
           finding.accountAlias,
           ...identifyingLabels,
         ],
+        priority: this.getPriorityNumber(finding.severity ?? "INFORMATIONAL"),
         ...this.customJiraFields,
       },
     };
