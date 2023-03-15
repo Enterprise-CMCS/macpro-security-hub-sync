@@ -85,6 +85,13 @@ export class SecurityHubJiraSync {
       // close all security-hub labeled Jira issues that do not have an active finding
       for (var i = 0; i < jiraIssues.length; i++) {
         if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
+          console.log(
+            "Closing Jira Issue:",
+            JSON.stringify({
+              key: jiraIssues[i].key,
+              summary: jiraIssues[i].fields.summary,
+            })
+          );
           await this.jira.closeIssue(jiraIssues[i].key);
         }
       }
@@ -220,7 +227,10 @@ export class SecurityHubJiraSync {
     } catch (e: any) {
       throw new Error(`Error creating Jira issue from finding: ${e.message}`);
     }
-    console.log("New Jira issue created:", newIssueInfo);
+    console.log(
+      "Creating Jira issue:",
+      JSON.stringify({ ...newIssueInfo, summary: newIssueData.fields.summary })
+    );
   }
 
   createJiraIssuesForNewFindings(
