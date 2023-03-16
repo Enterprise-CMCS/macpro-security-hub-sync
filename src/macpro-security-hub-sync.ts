@@ -228,7 +228,7 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: this.getPriorityNumber(finding.severity ?? "INFORMATIONAL"),
+          id: finding.severity ? this.getPriorityNumber(finding.severity) : 3, // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
