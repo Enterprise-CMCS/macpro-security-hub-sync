@@ -9,6 +9,12 @@ interface SecurityHubJiraSyncOptions {
   epicKey?: string;
 }
 
+interface UpdateForReturn {
+  action: string;
+  webUrl: string;
+  summary: string;
+}
+
 export class SecurityHubJiraSync {
   private readonly jira: Jira;
   private readonly securityHub: SecurityHub;
@@ -29,6 +35,7 @@ export class SecurityHubJiraSync {
   }
 
   async sync() {
+    const updatesForReturn: UpdateForReturn[] = [];
     // Step 0. Gather and set some information that will be used throughout this function
     const accountId = await this.getAWSAccountID();
     const identifyingLabels: string[] = [accountId, this.region];
@@ -42,14 +49,20 @@ export class SecurityHubJiraSync {
     const shFindings = await this.securityHub.getAllActiveFindings();
 
     // Step 3. Close existing Jira issues if their finding is no longer active/current
-    await this.closeIssuesForResolvedFindings(jiraIssues, shFindings);
+    updatesForReturn.push(
+      ...(await this.closeIssuesForResolvedFindings(jiraIssues, shFindings))
+    );
 
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
-    await this.createJiraIssuesForNewFindings(
-      jiraIssues,
-      shFindings,
-      identifyingLabels
+    updatesForReturn.push(
+      ...(await this.createJiraIssuesForNewFindings(
+        jiraIssues,
+        shFindings,
+        identifyingLabels
+      ))
     );
+
+    console.log(JSON.stringify(updatesForReturn));
   }
 
   async getAWSAccountID() {
@@ -76,6 +89,7 @@ export class SecurityHubJiraSync {
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[]
   ) {
+    const updatesForReturn: UpdateForReturn[] = [];
     const expectedJiraIssueTitles = Array.from(
       new Set(
         shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`)
@@ -85,14 +99,12 @@ export class SecurityHubJiraSync {
       // close all security-hub labeled Jira issues that do not have an active finding
       for (var i = 0; i < jiraIssues.length; i++) {
         if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
-          console.log(
-            "Closing Jira Issue:",
-            JSON.stringify({
-              key: jiraIssues[i].key,
-              summary: jiraIssues[i].fields.summary,
-            })
-          );
           await this.jira.closeIssue(jiraIssues[i].key);
+          updatesForReturn.push({
+            action: "closed",
+            webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
+            summary: jiraIssues[i].fields.summary,
+          });
         }
       }
     } catch (e: any) {
@@ -100,6 +112,7 @@ export class SecurityHubJiraSync {
         `Error closing Jira issue for resolved finding: ${e.message}`
       );
     }
+    return updatesForReturn;
   }
 
   createIssueBody(finding: SecurityHubFinding) {
@@ -229,30 +242,39 @@ export class SecurityHubJiraSync {
     } catch (e: any) {
       throw new Error(`Error creating Jira issue from finding: ${e.message}`);
     }
-    console.log(
-      "Creating Jira issue:",
-      JSON.stringify({ ...newIssueInfo, summary: newIssueData.fields.summary })
-    );
+    return {
+      action: "created",
+      webUrl: newIssueInfo.webUrl,
+      summary: newIssueData.fields.summary,
+    };
   }
 
-  createJiraIssuesForNewFindings(
+  async createJiraIssuesForNewFindings(
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[],
     identifyingLabels: string[]
   ) {
+    const updatesForReturn: UpdateForReturn[] = [];
     const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
     const uniqueSecurityHubFindings = [
       ...new Set(shFindings.map((finding) => JSON.stringify(finding))),
     ].map((finding) => JSON.parse(finding));
-    uniqueSecurityHubFindings
-      .filter(
-        (finding) =>
-          !existingJiraIssueTitles.includes(
-            `SecurityHub Finding - ${finding.title}`
-          )
-      )
-      .forEach((finding) =>
-        this.createJiraIssueFromFinding(finding, identifyingLabels)
-      );
+
+    for (let i = 0; i < uniqueSecurityHubFindings.length; i++) {
+      const finding = uniqueSecurityHubFindings[i];
+      if (
+        !existingJiraIssueTitles.includes(
+          `SecurityHub Finding - ${finding.title}`
+        )
+      ) {
+        const update = await this.createJiraIssueFromFinding(
+          finding,
+          identifyingLabels
+        );
+        updatesForReturn.push(update);
+      }
+    }
+
+    return updatesForReturn;
   }
 }
