@@ -1,5 +1,6 @@
 import JiraClient, { IssueObject } from "jira-client";
 import * as dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 
@@ -25,6 +26,28 @@ export class Jira {
       apiVersion: "2",
       strictSSL: true,
     });
+  }
+
+  async removeCurrentUserAsWatcher(issueKey: string) {
+    try {
+      const currentUser = await this.jira.getCurrentUser();
+
+      // Remove the current user as a watcher
+      await axios({
+        method: "DELETE",
+        url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
+          ).toString("base64")}`,
+        },
+        params: {
+          accountId: currentUser.accountId,
+        },
+      });
+    } catch (err) {
+      console.error("Error creating issue or removing watcher:", err);
+    }
   }
 
   private static checkEnvVars(): void {
@@ -95,15 +118,14 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      console.log("Creating Jira issue");
-
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
-      const response = await this.jira.addNewIssue(issue);
-      response[
+      const newIssue = await this.jira.addNewIssue(issue);
+      newIssue[
         "webUrl"
-      ] = `https://${process.env.JIRA_HOST}/browse/${response.key}`;
-      return response;
+      ] = `https://${process.env.JIRA_HOST}/browse/${newIssue.key}`;
+      await this.removeCurrentUserAsWatcher(newIssue.key);
+      return newIssue;
     } catch (e: any) {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
@@ -112,7 +134,6 @@ export class Jira {
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
-      console.log("Need to close Jira issue:", issueKey);
       const transitions = await this.jira.listTransitions(issueKey);
       const doneTransition = transitions.transitions.find(
         (t: { name: string }) => t.name === "Done"
@@ -125,7 +146,6 @@ export class Jira {
       await this.jira.transitionIssue(issueKey, {
         transition: { id: doneTransition.id },
       });
-      console.log(`Issue ${issueKey} has been transitioned to "Done"`);
     } catch (e: any) {
       throw new Error(`Error closing issue ${issueKey}: ${e.message}`);
     }

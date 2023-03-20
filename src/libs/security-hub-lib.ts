@@ -9,6 +9,7 @@ import {
 
 export interface SecurityHubFinding {
   title?: string;
+  createdAt?: string;
   region?: string;
   accountAlias?: string;
   awsAccountId?: string;
@@ -44,6 +45,14 @@ export class SecurityHub {
   async getAllActiveFindings() {
     try {
       const securityHubClient = new SecurityHubClient({ region: this.region });
+
+      const currentTime = new Date();
+
+      // delay for filtering out ephemeral issues
+      const delayForNewIssues =
+        +process.env.SECURITY_HUB_NEW_ISSUE_DELAY! || 24 * 60 * 60 * 1000; // 1 day
+      const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
+
       const filters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
         WorkflowStatus: [
@@ -52,6 +61,12 @@ export class SecurityHub {
         ],
         ProductName: [{ Comparison: "EQUALS", Value: "Security Hub" }],
         SeverityLabel: this.severityLabels,
+        CreatedAt: [
+          {
+            Start: "1970-01-01T00:00:00Z",
+            End: maxDatetime.toISOString(),
+          },
+        ],
       };
 
       // use a Set to store unique findings by title
@@ -92,6 +107,7 @@ export class SecurityHub {
     if (!finding) return {};
     return {
       title: finding.Title,
+      createdAt: new Date(finding.CreatedAt ?? "").toLocaleString(),
       region: finding.Region,
       accountAlias: this.accountAlias,
       awsAccountId: finding.AwsAccountId,
