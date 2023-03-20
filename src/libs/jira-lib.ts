@@ -31,7 +31,6 @@ export class Jira {
   async removeCurrentUserAsWatcher(issueKey: string) {
     try {
       const currentUser = await this.jira.getCurrentUser();
-      // console.log("currentUser is", currentUser);
 
       // Remove the current user as a watcher
       await axios({
@@ -46,7 +45,6 @@ export class Jira {
           accountId: currentUser.accountId,
         },
       });
-      // console.log("watcher removed:", issueKey);
     } catch (err) {
       console.error("Error creating issue or removing watcher:", err);
     }
@@ -120,8 +118,6 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      // console.log("Creating Jira issue");
-
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const newIssue = await this.jira.addNewIssue(issue);

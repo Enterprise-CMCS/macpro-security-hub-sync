@@ -47,7 +47,11 @@ export class SecurityHub {
       const securityHubClient = new SecurityHubClient({ region: this.region });
 
       const currentTime = new Date();
-      const oneDayAgo = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
+
+      // delay for filtering out ephemeral issues
+      const delayForNewIssues =
+        +process.env.SECURITY_HUB_NEW_ISSUE_DELAY! || 24 * 60 * 60 * 1000; // 1 day
+      const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
 
       const filters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
@@ -60,7 +64,7 @@ export class SecurityHub {
         CreatedAt: [
           {
             Start: "1970-01-01T00:00:00Z",
-            End: oneDayAgo.toISOString(),
+            End: maxDatetime.toISOString(),
           },
         ],
       };
