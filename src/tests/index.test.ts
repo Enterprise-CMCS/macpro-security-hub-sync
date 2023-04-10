@@ -1,4 +1,4 @@
-import { it, describe, expect, beforeEach } from "vitest";
+import { it, describe, expect, beforeEach, afterEach, vi } from "vitest";
 import { SecurityHubJiraSync } from "../index";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
@@ -7,9 +7,9 @@ import {
 } from "@aws-sdk/client-securityhub";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
-import JiraClient from "jira-client";
-import sinon from "sinon";
+import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
+import axios, { AxiosRequestConfig } from "axios";
 
 // ******** constants ********
 
@@ -59,6 +59,42 @@ const getFindingsCommandResponse = {
 
 // ******** mocks ********
 
+const jiraAddNewIssueCalls: IssueObject[] = [];
+const jiraSearchCalls: JsonResponse[] = [];
+
+vi.mock("jira-client", () => {
+  return {
+    default: class {
+      searchJira(searchString: string) {
+        jiraSearchCalls.push({ searchString });
+        return Promise.resolve(searchJiraResponse);
+      }
+      async addNewIssue(issue: IssueObject) {
+        jiraAddNewIssueCalls.push(issue);
+        return Promise.resolve(addNewIssueJiraResponse);
+      }
+      getCurrentUser() {
+        return "Current User";
+      }
+    },
+  };
+});
+
+vi.mock("axios", () => {
+  class AxiosMock {
+    async request(config: AxiosRequestConfig) {
+      return { status: 200, data: {} };
+    }
+  }
+
+  return {
+    default: async function (config: AxiosRequestConfig) {
+      const axiosInstance = new AxiosMock();
+      return axiosInstance.request(config);
+    },
+  };
+});
+
 // IAM
 const iamClient = mockClient(IAMClient);
 iamClient
@@ -91,13 +127,6 @@ stsClient.on(GetCallerIdentityCommand, {}).resolves({
   Account: testAwsAccountId,
 });
 
-// Jira
-const searchJiraStub = sinon.stub(JiraClient.prototype, "searchJira");
-searchJiraStub.resolves(searchJiraResponse);
-
-const addNewIssueJiraStub = sinon.stub(JiraClient.prototype, "addNewIssue");
-addNewIssueJiraStub.resolves(addNewIssueJiraResponse);
-
 // ******** setup ********
 
 process.env.JIRA_HOST = "testHost";
@@ -106,11 +135,20 @@ process.env.JIRA_TOKEN = "testToken";
 process.env.JIRA_PROJECT = testProject;
 process.env.JIRA_CLOSED_STATUSES = testStatus;
 
+let originalJiraClosedStatuses;
+
 beforeEach(() => {
+  originalJiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES;
   iamClient.resetHistory();
   stsClient.resetHistory();
-  searchJiraStub.resetHistory();
-  addNewIssueJiraStub.resetHistory();
+
+  // Reset the calls arrays
+  jiraSearchCalls.length = 0;
+  jiraAddNewIssueCalls.length = 0;
+});
+
+afterEach(() => {
+  process.env.JIRA_CLOSED_STATUSES = originalJiraClosedStatuses;
 });
 
 // ******** tests ********
@@ -135,23 +173,19 @@ describe("SecurityHubJiraSync", () => {
       epicKey: "ABCD-1234",
     });
     await sync.sync();
-    expect(addNewIssueJiraStub.getCall(0).args[0].fields.parent.key).toBe(
-      "ABCD-1234"
-    );
+    expect(jiraAddNewIssueCalls[0].fields.parent.key).toBe("ABCD-1234");
   });
 
   it("doesn't pass epic key if it isn't set", async () => {
     const sync = new SecurityHubJiraSync({});
     await sync.sync();
-    expect(
-      addNewIssueJiraStub.getCall(0).args[0].fields.parent
-    ).toBeUndefined();
+    expect(jiraAddNewIssueCalls[0].fields.parent).toBeUndefined();
   });
 
   it("creates the expected JQL query when searching for Jira issues", async () => {
     const sync = new SecurityHubJiraSync({ region: testAwsRegion });
     await sync.sync();
-    const actualQueryParts = searchJiraStub.getCall(0).args[0].split(" AND ");
+    const actualQueryParts = jiraSearchCalls[0].searchString.split(" AND ");
     const expectedQueryParts = [
       `labels = 'security-hub'`,
       `labels = '${testAwsAccountId}'`,
