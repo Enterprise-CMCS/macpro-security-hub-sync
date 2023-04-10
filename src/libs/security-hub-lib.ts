@@ -107,7 +107,6 @@ export class SecurityHub {
     if (!finding) return {};
     return {
       title: finding.Title,
-      createdAt: new Date(finding.CreatedAt ?? "").toLocaleString(),
       region: finding.Region,
       accountAlias: this.accountAlias,
       awsAccountId: finding.AwsAccountId,
