@@ -125,11 +125,9 @@ describe("SecurityHubJiraSync", () => {
   });
 
   it("passes epic key when creating an issue", async () => {
-    const sync = new SecurityHubJiraSync({
-      epicKey: "ABCD-1234",
-    });
+    const sync = new SecurityHubJiraSync({ epicKey: "ABC-123" });
     await sync.sync();
-    expect(jiraAddNewIssueCalls[0].fields.parent.key).toBe("ABCD-1234");
+    expect(jiraAddNewIssueCalls[0].fields.parent.key).toBe("ABC-123");
   });
 
   it("doesn't pass epic key if it isn't set", async () => {
