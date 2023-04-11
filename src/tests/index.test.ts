@@ -12,14 +12,12 @@ import { Jira } from "../libs";
 import axios, { AxiosRequestConfig } from "axios";
 
 // ******** constants ********
-
 const testAwsAccountId = "012345678901";
 const testProject = "testProject";
 const testStatus = "testStatus";
 const testAwsRegion = "us-east-1";
 
 // ******** mock responses ********
-
 const searchJiraResponse = {
   issues: [
     {
@@ -58,7 +56,6 @@ const getFindingsCommandResponse = {
 };
 
 // ******** mocks ********
-
 const jiraAddNewIssueCalls: IssueObject[] = [];
 const jiraSearchCalls: JsonResponse[] = [];
 
@@ -128,7 +125,6 @@ stsClient.on(GetCallerIdentityCommand, {}).resolves({
 });
 
 // ******** setup ********
-
 process.env.JIRA_HOST = "testHost";
 process.env.JIRA_USERNAME = "testUsername";
 process.env.JIRA_TOKEN = "testToken";
@@ -152,7 +148,6 @@ afterEach(() => {
 });
 
 // ******** tests ********
-
 describe("SecurityHubJiraSync", () => {
   it("jira returns search results", async () => {
     const jira = new JiraClient({ host: "" });
