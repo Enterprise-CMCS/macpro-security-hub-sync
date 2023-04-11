@@ -10,12 +10,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
 import axios, { AxiosRequestConfig } from "axios";
-
-// ******** constants ********
-const testAwsAccountId = "012345678901";
-const testProject = "testProject";
-const testStatus = "testStatus";
-const testAwsRegion = "us-east-1";
+import * as constants from "./constants";
 
 // ******** mock responses ********
 const searchJiraResponse = {
@@ -111,7 +106,7 @@ sHClient
           ...getFindingsCommandResponse.Findings[0],
           ProductFields: {
             Title: "Test Finding",
-            StandardsControlArn: `arn:aws:securityhub:${testAwsRegion}:${testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
+            StandardsControlArn: `arn:aws:securityhub:${constants.testAwsRegion}:${constants.testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
           },
         },
       ],
@@ -121,15 +116,15 @@ sHClient
 // STS
 const stsClient = mockClient(STSClient);
 stsClient.on(GetCallerIdentityCommand, {}).resolves({
-  Account: testAwsAccountId,
+  Account: constants.testAwsAccountId,
 });
 
 // ******** setup ********
 process.env.JIRA_HOST = "testHost";
 process.env.JIRA_USERNAME = "testUsername";
 process.env.JIRA_TOKEN = "testToken";
-process.env.JIRA_PROJECT = testProject;
-process.env.JIRA_CLOSED_STATUSES = testStatus;
+process.env.JIRA_PROJECT = constants.testProject;
+process.env.JIRA_CLOSED_STATUSES = constants.testStatus;
 
 let originalJiraClosedStatuses;
 
@@ -178,15 +173,15 @@ describe("SecurityHubJiraSync", () => {
   });
 
   it("creates the expected JQL query when searching for Jira issues", async () => {
-    const sync = new SecurityHubJiraSync({ region: testAwsRegion });
+    const sync = new SecurityHubJiraSync({ region: constants.testAwsRegion });
     await sync.sync();
     const actualQueryParts = jiraSearchCalls[0].searchString.split(" AND ");
     const expectedQueryParts = [
       `labels = 'security-hub'`,
-      `labels = '${testAwsAccountId}'`,
-      `labels = '${testAwsRegion}'`,
-      `project = '${testProject}'`,
-      `status not in ('${testStatus}')`,
+      `labels = '${constants.testAwsAccountId}'`,
+      `labels = '${constants.testAwsRegion}'`,
+      `project = '${constants.testProject}'`,
+      `status not in ('${constants.testStatus}')`,
     ];
     expect(actualQueryParts).toEqual(
       expect.arrayContaining(expectedQueryParts)
