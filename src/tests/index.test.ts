@@ -11,44 +11,7 @@ import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
 import axios, { AxiosRequestConfig } from "axios";
 import * as constants from "./constants";
-
-// ******** mock responses ********
-const searchJiraResponse = {
-  issues: [
-    {
-      fields: {
-        summary: "Sample SecurityHub Finding",
-      },
-    },
-  ],
-};
-
-const addNewIssueJiraResponse = {
-  key: "TEST-15",
-};
-
-const listAccountAliasesResponse = {
-  $metadata: {},
-  AccountAliases: ["my-account-alias"],
-};
-
-const getFindingsCommandResponse = {
-  Findings: [
-    {
-      SchemaVersion: undefined,
-      Id: undefined,
-      ProductArn: undefined,
-      GeneratorId: undefined,
-      AwsAccountId: undefined,
-      CreatedAt: undefined,
-      UpdatedAt: undefined,
-      Title: undefined,
-      Description: undefined,
-      Resources: undefined,
-    },
-  ],
-  $metadata: {},
-};
+import * as mockResponses from "./mockResponses";
 
 // ******** mocks ********
 const jiraAddNewIssueCalls: IssueObject[] = [];
@@ -59,11 +22,11 @@ vi.mock("jira-client", () => {
     default: class {
       searchJira(searchString: string) {
         jiraSearchCalls.push({ searchString });
-        return Promise.resolve(searchJiraResponse);
+        return Promise.resolve(mockResponses.searchJiraResponse);
       }
       async addNewIssue(issue: IssueObject) {
         jiraAddNewIssueCalls.push(issue);
-        return Promise.resolve(addNewIssueJiraResponse);
+        return Promise.resolve(mockResponses.addNewIssueJiraResponse);
       }
       getCurrentUser() {
         return "Current User";
@@ -91,19 +54,22 @@ vi.mock("axios", () => {
 const iamClient = mockClient(IAMClient);
 iamClient
   .on(ListAccountAliasesCommand, {})
-  .resolves(listAccountAliasesResponse);
+  .resolves(mockResponses.listAccountAliasesResponse);
 
 // Security Hub
 const sHClient = mockClient(SecurityHubClient);
 sHClient
   .on(GetFindingsCommand, {})
-  .resolvesOnce({ ...getFindingsCommandResponse, NextToken: "test" })
+  .resolvesOnce({
+    ...mockResponses.getFindingsCommandResponse,
+    NextToken: "test",
+  })
   .resolves({
-    ...getFindingsCommandResponse,
+    ...mockResponses.getFindingsCommandResponse,
     ...{
       Findings: [
         {
-          ...getFindingsCommandResponse.Findings[0],
+          ...mockResponses.getFindingsCommandResponse.Findings[0],
           ProductFields: {
             Title: "Test Finding",
             StandardsControlArn: `arn:aws:securityhub:${constants.testAwsRegion}:${constants.testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
@@ -149,7 +115,7 @@ describe("SecurityHubJiraSync", () => {
     const jqlString =
       'project = TEST AND labels = security-hub AND status not in ("Done")';
     const result = await jira.searchJira(jqlString, {});
-    expect(result).toEqual(searchJiraResponse);
+    expect(result).toEqual(mockResponses.searchJiraResponse);
   });
 
   it("sync response", async () => {
@@ -194,7 +160,7 @@ describe("SecurityHubJiraSync", () => {
     const jqlString =
       'project = TEST AND labels = security-hub AND status not in ("Done")';
     const result = await jira.searchJira(jqlString, {});
-    expect(result).toEqual(searchJiraResponse);
+    expect(result).toEqual(mockResponses.searchJiraResponse);
   });
 
   it("Missing a required environment variable", () => {
