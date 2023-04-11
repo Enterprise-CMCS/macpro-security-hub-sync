@@ -6,7 +6,7 @@ import {
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 import * as mockResponses from "./mockResponses";
-import * as constants from "./constants";
+import { Constants } from "./constants";
 
 export const mockClients = () => {
   // IAM
@@ -31,7 +31,7 @@ export const mockClients = () => {
             ...mockResponses.getFindingsCommandResponse.Findings[0],
             ProductFields: {
               Title: "Test Finding",
-              StandardsControlArn: `arn:aws:securityhub:${constants.testAwsRegion}:${constants.testAwsAccountId}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
+              StandardsControlArn: `arn:aws:securityhub:${Constants.TEST_AWS_REGION}:${Constants.TEST_AWS_ACCOUNT_ID}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
             },
           },
         ],
@@ -41,6 +41,6 @@ export const mockClients = () => {
   // STS
   const stsClient = mockClient(STSClient);
   stsClient.on(GetCallerIdentityCommand, {}).resolves({
-    Account: constants.testAwsAccountId,
+    Account: Constants.TEST_AWS_ACCOUNT_ID,
   });
 };

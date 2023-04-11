@@ -4,7 +4,7 @@ import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
 import axios, { AxiosRequestConfig } from "axios";
 import { mockClients } from "./mockClients";
-import * as constants from "./constants";
+import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
 
 // ******** mocks ********
@@ -16,8 +16,8 @@ beforeEach(() => {
   process.env.JIRA_HOST = "testHost";
   process.env.JIRA_USERNAME = "testUsername";
   process.env.JIRA_TOKEN = "testToken";
-  process.env.JIRA_PROJECT = constants.testProject;
-  process.env.JIRA_CLOSED_STATUSES = constants.testStatus;
+  process.env.JIRA_PROJECT = Constants.TEST_PROJECT;
+  process.env.JIRA_CLOSED_STATUSES = Constants.TEST_STATUS;
   mockClients();
   jiraAddNewIssueCalls = [];
   jiraSearchCalls = [];
@@ -90,15 +90,17 @@ describe("SecurityHubJiraSync", () => {
   });
 
   it("creates the expected JQL query when searching for Jira issues", async () => {
-    const sync = new SecurityHubJiraSync({ region: constants.testAwsRegion });
+    const sync = new SecurityHubJiraSync({
+      region: Constants.TEST_AWS_REGION,
+    });
     await sync.sync();
     const actualQueryParts = jiraSearchCalls[0].searchString.split(" AND ");
     const expectedQueryParts = [
       `labels = 'security-hub'`,
-      `labels = '${constants.testAwsAccountId}'`,
-      `labels = '${constants.testAwsRegion}'`,
-      `project = '${constants.testProject}'`,
-      `status not in ('${constants.testStatus}')`,
+      `labels = '${Constants.TEST_AWS_ACCOUNT_ID}'`,
+      `labels = '${Constants.TEST_AWS_REGION}'`,
+      `project = '${Constants.TEST_PROJECT}'`,
+      `status not in ('${Constants.TEST_STATUS}')`,
     ];
     expect(actualQueryParts).toEqual(
       expect.arrayContaining(expectedQueryParts)

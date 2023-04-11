@@ -1,4 +1,6 @@
-export const testAwsAccountId = "012345678901";
-export const testProject = "testProject";
-export const testStatus = "testStatus";
-export const testAwsRegion = "us-east-1";
+export const Constants = {
+  TEST_AWS_ACCOUNT_ID: "012345678901",
+  TEST_PROJECT: "TEST_PROJECT",
+  TEST_STATUS: "TEST_STATUS",
+  TEST_AWS_REGION: "us-east-1",
+};
