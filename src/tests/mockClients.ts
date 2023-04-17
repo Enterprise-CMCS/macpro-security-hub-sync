@@ -8,7 +8,7 @@ import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 import * as mockResponses from "./mockResponses";
 import { Constants } from "./constants";
-import axios, { AxiosRequestConfig } from "axios";
+import { AxiosRequestConfig } from "axios";
 
 // IAM
 const iamClient = mockClient(IAMClient);
