@@ -3,7 +3,6 @@ import "./mockClients";
 import { SecurityHubJiraSync } from "../index";
 import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
-import axios, { AxiosRequestConfig } from "axios";
 import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
 
@@ -41,21 +40,6 @@ vi.mock("jira-client", () => {
       getCurrentUser() {
         return "Current User";
       }
-    },
-  };
-});
-
-vi.mock("axios", () => {
-  class AxiosMock {
-    async request(config: AxiosRequestConfig) {
-      return { status: 200, data: {} };
-    }
-  }
-
-  return {
-    default: async function (config: AxiosRequestConfig) {
-      const axiosInstance = new AxiosMock();
-      return axiosInstance.request(config);
     },
   };
 });

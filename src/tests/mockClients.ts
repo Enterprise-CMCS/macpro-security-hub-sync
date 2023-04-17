@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
@@ -7,6 +8,7 @@ import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 import * as mockResponses from "./mockResponses";
 import { Constants } from "./constants";
+import axios, { AxiosRequestConfig } from "axios";
 
 // IAM
 const iamClient = mockClient(IAMClient);
@@ -41,4 +43,20 @@ sHClient
 const stsClient = mockClient(STSClient);
 stsClient.on(GetCallerIdentityCommand, {}).resolves({
   Account: Constants.TEST_AWS_ACCOUNT_ID,
+});
+
+// axios
+class AxiosMock {
+  async request(config: AxiosRequestConfig) {
+    return { status: 200, data: {} };
+  }
+}
+
+vi.mock("axios", () => {
+  return {
+    default: async function (config: AxiosRequestConfig) {
+      const axiosInstance = new AxiosMock();
+      return axiosInstance.request(config);
+    },
+  };
 });
