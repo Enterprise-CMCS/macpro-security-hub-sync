@@ -25,7 +25,7 @@ afterEach(() => {
 
 // ******** tests ********
 describe("SecurityHubJiraSync", () => {
-  it("jira returns search results", async () => {
+  it("JiraClient.searchJira should return expected search results", async () => {
     const jira = new JiraClient({ host: "" });
     const jqlString =
       'project = TEST AND labels = security-hub AND status not in ("Done")';
@@ -33,7 +33,7 @@ describe("SecurityHubJiraSync", () => {
     expect(result).toEqual(mockResponses.searchJiraResponse);
   });
 
-  it("sync completes without error", async () => {
+  it("SecurityHubJiraSync.sync should complete without error", async () => {
     const sync = new SecurityHubJiraSync({});
     await expect(sync.sync()).resolves.not.toThrow();
   });
@@ -68,7 +68,7 @@ describe("SecurityHubJiraSync", () => {
     );
   });
 
-  it("Without JIRA_CLOSED_STATUSES environment variable", async () => {
+  it("JiraClient.searchJira should return expected search results without JIRA_CLOSED_STATUSES environment variable", async () => {
     delete process.env.JIRA_CLOSED_STATUSES;
     const jira = new JiraClient({ host: "" });
     const jqlString =
