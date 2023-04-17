@@ -1,14 +1,12 @@
 import { it, describe, expect, beforeEach, afterEach, vi } from "vitest";
-import "./mockClients";
+import { jiraAddNewIssueCalls, jiraSearchCalls } from "./mockClients";
 import { SecurityHubJiraSync } from "../index";
-import JiraClient, { IssueObject, JsonResponse } from "jira-client";
+import JiraClient from "jira-client";
 import { Jira } from "../libs";
 import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
 
 // ******** mocks ********
-let jiraAddNewIssueCalls: IssueObject[] = [];
-let jiraSearchCalls: JsonResponse[] = [];
 let originalJiraClosedStatuses;
 
 beforeEach(() => {
@@ -17,31 +15,11 @@ beforeEach(() => {
   process.env.JIRA_TOKEN = "testToken";
   process.env.JIRA_PROJECT = Constants.TEST_PROJECT;
   process.env.JIRA_CLOSED_STATUSES = Constants.TEST_STATUS;
-  jiraAddNewIssueCalls = [];
-  jiraSearchCalls = [];
   originalJiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES;
 });
 
 afterEach(() => {
   process.env.JIRA_CLOSED_STATUSES = originalJiraClosedStatuses;
-});
-
-vi.mock("jira-client", () => {
-  return {
-    default: class {
-      searchJira(searchString: string) {
-        jiraSearchCalls.push({ searchString });
-        return Promise.resolve(mockResponses.searchJiraResponse);
-      }
-      async addNewIssue(issue: IssueObject) {
-        jiraAddNewIssueCalls.push(issue);
-        return Promise.resolve(mockResponses.addNewIssueJiraResponse);
-      }
-      getCurrentUser() {
-        return "Current User";
-      }
-    },
-  };
 });
 
 // ******** tests ********

@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi, beforeEach } from "vitest";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
@@ -9,6 +9,12 @@ import { mockClient } from "aws-sdk-client-mock";
 import * as mockResponses from "./mockResponses";
 import { Constants } from "./constants";
 import { AxiosRequestConfig } from "axios";
+import { IssueObject, JsonResponse } from "jira-client";
+
+beforeEach(() => {
+  jiraAddNewIssueCalls = [];
+  jiraSearchCalls = [];
+});
 
 // IAM
 const iamClient = mockClient(IAMClient);
@@ -57,6 +63,28 @@ vi.mock("axios", () => {
     default: async function (config: AxiosRequestConfig) {
       const axiosInstance = new AxiosMock();
       return axiosInstance.request(config);
+    },
+  };
+});
+
+// jira-client
+export let jiraAddNewIssueCalls: IssueObject[] = [];
+export let jiraSearchCalls: JsonResponse[] = [];
+
+vi.mock("jira-client", () => {
+  return {
+    default: class {
+      searchJira(searchString: string) {
+        jiraSearchCalls.push({ searchString });
+        return Promise.resolve(mockResponses.searchJiraResponse);
+      }
+      async addNewIssue(issue: IssueObject) {
+        jiraAddNewIssueCalls.push(issue);
+        return Promise.resolve(mockResponses.addNewIssueJiraResponse);
+      }
+      getCurrentUser() {
+        return "Current User";
+      }
     },
   };
 });
