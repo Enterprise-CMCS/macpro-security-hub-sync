@@ -1,9 +1,9 @@
 import { it, describe, expect, beforeEach, afterEach, vi } from "vitest";
+import "./mockClients";
 import { SecurityHubJiraSync } from "../index";
 import JiraClient, { IssueObject, JsonResponse } from "jira-client";
 import { Jira } from "../libs";
 import axios, { AxiosRequestConfig } from "axios";
-import { mockClients } from "./mockClients";
 import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
 
@@ -18,7 +18,6 @@ beforeEach(() => {
   process.env.JIRA_TOKEN = "testToken";
   process.env.JIRA_PROJECT = Constants.TEST_PROJECT;
   process.env.JIRA_CLOSED_STATUSES = Constants.TEST_STATUS;
-  mockClients();
   jiraAddNewIssueCalls = [];
   jiraSearchCalls = [];
   originalJiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES;
