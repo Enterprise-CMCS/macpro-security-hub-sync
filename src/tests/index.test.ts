@@ -1,4 +1,4 @@
-import { it, describe, expect, beforeEach, afterEach, vi } from "vitest";
+import { it, describe, expect, beforeEach, afterEach } from "vitest";
 import { jiraAddNewIssueCalls, jiraSearchCalls } from "./mockClients";
 import { SecurityHubJiraSync } from "../index";
 import JiraClient from "jira-client";
@@ -9,6 +9,7 @@ import * as mockResponses from "./mockResponses";
 // ******** mocks ********
 let originalJiraClosedStatuses;
 
+// Mock setup
 beforeEach(() => {
   process.env.JIRA_HOST = "testHost";
   process.env.JIRA_USERNAME = "testUsername";
