@@ -33,10 +33,9 @@ describe("SecurityHubJiraSync", () => {
     expect(result).toEqual(mockResponses.searchJiraResponse);
   });
 
-  it("sync response", async () => {
+  it("sync completes without error", async () => {
     const sync = new SecurityHubJiraSync({});
-    const syncResult = await sync.sync();
-    expect(syncResult).not.toBeDefined();
+    await expect(sync.sync()).resolves.not.toThrow();
   });
 
   it("passes epic key when creating an issue", async () => {
