@@ -47,7 +47,6 @@ export class SecurityHub {
       const securityHubClient = new SecurityHubClient({ region: this.region });
 
       const currentTime = new Date();
-      console.log("currentTime:", currentTime);
 
       // delay for filtering out ephemeral issues
       const delayForNewIssues =
@@ -55,9 +54,6 @@ export class SecurityHub {
           ? +process.env.SECURITY_HUB_NEW_ISSUE_DELAY
           : 24 * 60 * 60 * 1000; // 1 day
       const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
-
-      console.log("maxDatetime:", maxDatetime);
-      console.log("maxDatetime.toISOString():", maxDatetime.toISOString());
 
       const filters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
