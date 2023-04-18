@@ -85,14 +85,15 @@ export class SecurityHub {
             NextToken: nextToken,
           })
         );
-        if (response.Findings) {
+        if (response && response.Findings) {
           for (const finding of response.Findings) {
             uniqueFindings.add(
               this.awsSecurityFindingToSecurityHubFinding(finding)
             );
           }
         }
-        nextToken = response.NextToken;
+        if (response && response.NextToken) nextToken = response.NextToken;
+        else nextToken = undefined;
       } while (nextToken);
 
       return Array.from(uniqueFindings).map((finding) => {
