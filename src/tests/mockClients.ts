@@ -23,7 +23,7 @@ iamClient
   .resolves(mockResponses.listAccountAliasesResponse);
 
 // Security Hub
-const sHClient = mockClient(SecurityHubClient);
+export const sHClient = mockClient(SecurityHubClient);
 sHClient
   .on(GetFindingsCommand, {})
   .resolvesOnce({
@@ -46,7 +46,7 @@ sHClient
   });
 
 // STS
-const stsClient = mockClient(STSClient);
+export const stsClient = mockClient(STSClient);
 stsClient.on(GetCallerIdentityCommand, {}).resolves({
   Account: Constants.TEST_AWS_ACCOUNT_ID,
 });

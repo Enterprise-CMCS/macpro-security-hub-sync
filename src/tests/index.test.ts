@@ -1,10 +1,17 @@
 import { it, describe, expect, beforeEach, afterEach } from "vitest";
-import { jiraAddNewIssueCalls, jiraSearchCalls } from "./mockClients";
+import {
+  jiraAddNewIssueCalls,
+  jiraSearchCalls,
+  sHClient,
+  stsClient,
+} from "./mockClients";
 import { SecurityHubJiraSync } from "../index";
 import JiraClient from "jira-client";
 import { Jira } from "../libs";
 import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
+import { GetFindingsCommand } from "@aws-sdk/client-securityhub";
+import { GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 
 // ******** mocks ********
 let originalJiraClosedStatuses;
@@ -81,6 +88,26 @@ describe("SecurityHubJiraSync", () => {
     delete process.env.JIRA_PROJECT;
     expect(() => new Jira()).toThrow(
       "Missing required environment variables: JIRA_PROJECT"
+    );
+  });
+
+  it("does not create new Jira issues if no findings are returned from Security Hub", async () => {
+    sHClient.on(GetFindingsCommand, {}).resolvesOnce({
+      Findings: [],
+    });
+    const sync = new SecurityHubJiraSync({});
+    await expect(sync.sync()).resolves.not.toThrow();
+    expect(jiraAddNewIssueCalls).toEqual([]);
+  });
+
+  it("throws an error when the AWS Account ID is invalid or missing", async () => {
+    stsClient
+      .on(GetCallerIdentityCommand, {})
+      .resolves({ Account: "invalid-account-id" });
+
+    const sync = new SecurityHubJiraSync({});
+    await expect(sync.sync()).rejects.toThrow(
+      "ERROR:  An issue was encountered when"
     );
   });
 });
