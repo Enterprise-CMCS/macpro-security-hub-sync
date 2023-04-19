@@ -1,17 +1,22 @@
-import { it, describe, expect, beforeEach, afterEach } from "vitest";
+import { it, describe, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   jiraAddNewIssueCalls,
   jiraSearchCalls,
   sHClient,
   stsClient,
+  AxiosMock,
 } from "./mockClients";
 import { SecurityHubJiraSync } from "../index";
 import JiraClient from "jira-client";
-import { Jira } from "../libs";
+import { Jira, SecurityHub } from "../libs";
 import { Constants } from "./constants";
 import * as mockResponses from "./mockResponses";
-import { GetFindingsCommand } from "@aws-sdk/client-securityhub";
+import {
+  AwsSecurityFinding,
+  GetFindingsCommand,
+} from "@aws-sdk/client-securityhub";
 import { GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+import { AxiosRequestConfig } from "axios";
 
 // ******** mocks ********
 let originalJiraClosedStatuses;
@@ -75,13 +80,10 @@ describe("SecurityHubJiraSync", () => {
     );
   });
 
-  it("JiraClient.searchJira should return expected search results without JIRA_CLOSED_STATUSES environment variable", async () => {
+  it('Jira lib should use ["Done"] for JIRA_CLOSED_STATUSES if the environment variable is not set', async () => {
     delete process.env.JIRA_CLOSED_STATUSES;
-    const jira = new JiraClient({ host: "" });
-    const jqlString =
-      'project = TEST AND labels = security-hub AND status not in ("Done")';
-    const result = await jira.searchJira(jqlString, {});
-    expect(result).toEqual(mockResponses.searchJiraResponse);
+    const jira = new Jira();
+    expect(jira.jiraClosedStatuses).toEqual(["Done"]);
   });
 
   it("Missing a required environment variable", () => {
@@ -100,6 +102,18 @@ describe("SecurityHubJiraSync", () => {
     expect(jiraAddNewIssueCalls).toEqual([]);
   });
 
+  it("Throws an exception for invalid severity", async () => {
+    sHClient.on(GetFindingsCommand, {}).resolves({
+      Findings: [
+        {
+          Severity: { Label: "test" },
+        } as AwsSecurityFinding,
+      ],
+    });
+    const sync = new SecurityHubJiraSync({});
+    await expect(sync.sync()).rejects.toThrow("Invalid severity: test");
+  });
+
   it("throws an error when the AWS Account ID is invalid or missing", async () => {
     stsClient
       .on(GetCallerIdentityCommand, {})
@@ -109,5 +123,55 @@ describe("SecurityHubJiraSync", () => {
     await expect(sync.sync()).rejects.toThrow(
       "ERROR:  An issue was encountered when"
     );
+  });
+
+  it("throws an error when STS GetCallerIdentity throws an error", async () => {
+    stsClient.on(GetCallerIdentityCommand, {}).rejects("error");
+
+    const sync = new SecurityHubJiraSync({});
+    await expect(sync.sync()).rejects.toThrow(
+      "Error getting AWS Account ID: error"
+    );
+  });
+
+  it("throws an error if searchQuery is missing AWS account ID label", async () => {
+    const jira = new Jira();
+    await expect(
+      jira.getAllSecurityHubIssuesInJiraProject(["some-label"])
+    ).rejects.toThrow();
+  });
+  it("getAllSecurityHubIssuesInJiraProject throws exception", async () => {
+    const jira = new Jira();
+
+    // Mock the JiraClient to return an incorrect retrun value
+    jira.jira.searchJira = async () => {
+      return new Error("test");
+    };
+
+    await expect(
+      jira.getAllSecurityHubIssuesInJiraProject(["123456789012"])
+    ).rejects.toThrow(
+      "Error getting Security Hub issues from Jira: Cannot read properties of undefined"
+    );
+  });
+
+  it("Error removing watcher from Jira issue", async () => {
+    const axiosInstance = new AxiosMock();
+
+    vi.mock("axios", () => {
+      return {
+        default: async function (config: AxiosRequestConfig) {
+          return axiosInstance.request(config);
+        },
+      };
+    });
+
+    const jira = new Jira();
+
+    try {
+      await jira.removeCurrentUserAsWatcher("ISSUE-123");
+    } catch (error) {
+      expect(error.message).toContain("Test error");
+    }
   });
 });

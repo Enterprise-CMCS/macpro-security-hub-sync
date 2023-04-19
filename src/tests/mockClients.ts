@@ -52,8 +52,12 @@ stsClient.on(GetCallerIdentityCommand, {}).resolves({
 });
 
 // axios
-class AxiosMock {
+export class AxiosMock {
   async request(config: AxiosRequestConfig) {
+    if (config.url?.includes("/issue/ISSUE-123/watchers")) {
+      throw new Error("Test error");
+    }
+
     return { status: 200, data: {} };
   }
 }
