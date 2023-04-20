@@ -12,6 +12,9 @@ describe("Jira tests", () => {
   testErrorRemovingWatcherFromJiraIssue();
   testErrorClosingJiraIssue();
   testMissingRequiredEnvVar();
+  testErrorCreatingJiraIssue();
+  testCannotFindDoneTransitionForIssue();
+  testTransitionIssue();
 });
 
 function testJiraClientSearchJira() {
@@ -103,5 +106,58 @@ function testMissingRequiredEnvVar() {
     expect(() => new Jira()).toThrow(
       "Missing required environment variables: JIRA_PROJECT"
     );
+  });
+}
+
+function testErrorCreatingJiraIssue() {
+  it("Error creating Jira issue", async () => {
+    const jira = new Jira();
+
+    jira.jira.addNewIssue = async () => {
+      throw new Error("Error adding new issue");
+    };
+
+    try {
+      await jira.createNewIssue({});
+    } catch (error) {
+      expect(error.message).toContain("Error creating Jira issue");
+    }
+  });
+}
+
+function testCannotFindDoneTransitionForIssue() {
+  it("Cannot find 'Done' transition for issue", async () => {
+    const jira = new Jira();
+
+    jira.jira.listTransitions = async () => {
+      return { transitions: [{ id: "1", name: "In Progress" }] };
+    };
+
+    try {
+      await jira.closeIssue("TEST-1");
+    } catch (error) {
+      expect(error.message).toContain(
+        'Cannot find "Done" transition for issue TEST-1'
+      );
+    }
+  });
+}
+
+function testTransitionIssue() {
+  it("Successfully transitions the Jira issue", async () => {
+    const jira = new Jira();
+    const issueKey = "TEST-1";
+    const doneTransition = { id: "100", name: "Done" };
+
+    jira.jira.listTransitions = async () => {
+      return { transitions: [doneTransition] };
+    };
+
+    jira.jira.transitionIssue = async (key, options) => {
+      expect(key).toBe(issueKey);
+      expect(options).toEqual({ transition: { id: doneTransition.id } });
+    };
+
+    await jira.closeIssue(issueKey);
   });
 }
