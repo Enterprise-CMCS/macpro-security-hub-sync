@@ -1,4 +1,4 @@
-import { vi, beforeEach } from "vitest";
+import { vi, beforeEach, afterEach } from "vitest";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 import {
   SecurityHubClient,
@@ -11,44 +11,62 @@ import { Constants } from "./constants";
 import { AxiosRequestConfig } from "axios";
 import { IssueObject, JsonResponse } from "jira-client";
 
+let originalJiraClosedStatuses;
+
 beforeEach(() => {
   jiraAddNewIssueCalls = [];
   jiraSearchCalls = [];
+  process.env.JIRA_HOST = "testHost";
+  process.env.JIRA_USERNAME = "testUsername";
+  process.env.JIRA_TOKEN = "testToken";
+  process.env.JIRA_PROJECT = Constants.TEST_PROJECT;
+  process.env.JIRA_CLOSED_STATUSES = Constants.TEST_STATUS;
+  originalJiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES;
+});
+
+afterEach(() => {
+  process.env.JIRA_CLOSED_STATUSES = originalJiraClosedStatuses;
 });
 
 // IAM
 const iamClient = mockClient(IAMClient);
-iamClient
-  .on(ListAccountAliasesCommand, {})
-  .resolves(mockResponses.listAccountAliasesResponse);
+beforeEach(() => {
+  iamClient
+    .on(ListAccountAliasesCommand, {})
+    .resolves(mockResponses.listAccountAliasesResponse);
+});
 
 // Security Hub
 export const sHClient = mockClient(SecurityHubClient);
-sHClient
-  .on(GetFindingsCommand, {})
-  .resolvesOnce({
-    ...mockResponses.getFindingsCommandResponse,
-    NextToken: "test",
-  })
-  .resolves({
-    ...mockResponses.getFindingsCommandResponse,
-    ...{
-      Findings: [
-        {
-          ...mockResponses.getFindingsCommandResponse.Findings[0],
-          ProductFields: {
-            Title: "Test Finding",
-            StandardsControlArn: `arn:aws:securityhub:${Constants.TEST_AWS_REGION}:${Constants.TEST_AWS_ACCOUNT_ID}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
+beforeEach(() => {
+  sHClient
+    .on(GetFindingsCommand, {})
+    .resolvesOnce({
+      ...mockResponses.getFindingsCommandResponse,
+      NextToken: "test",
+    })
+    .resolves({
+      ...mockResponses.getFindingsCommandResponse,
+      ...{
+        Findings: [
+          {
+            ...mockResponses.getFindingsCommandResponse.Findings[0],
+            ProductFields: {
+              Title: "Test Finding",
+              StandardsControlArn: `arn:aws:securityhub:${Constants.TEST_AWS_REGION}:${Constants.TEST_AWS_ACCOUNT_ID}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,
+            },
           },
-        },
-      ],
-    },
-  });
+        ],
+      },
+    });
+});
 
 // STS
 export const stsClient = mockClient(STSClient);
-stsClient.on(GetCallerIdentityCommand, {}).resolves({
-  Account: Constants.TEST_AWS_ACCOUNT_ID,
+beforeEach(() => {
+  stsClient.on(GetCallerIdentityCommand, {}).resolves({
+    Account: Constants.TEST_AWS_ACCOUNT_ID,
+  });
 });
 
 // axios
