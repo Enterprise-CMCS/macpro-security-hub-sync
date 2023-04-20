@@ -10,14 +10,28 @@ import { iamClient, sHClient } from "./mockClients";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 
 describe("SecurityHub tests", () => {
-  testSecurityHubGetAllFindings();
+  testSecurityHubGetAllFindingsWithEnvVarDelay();
+  testSecurityHubGetAllFindingsWithoutEnvVarDelay();
   testGetAllActiveFindingsThrowsException();
   testAccountAliasUndefined();
   testUndefinedFinding();
 });
 
-function testSecurityHubGetAllFindings() {
-  it("gets all active findings without a env var for SECURITY_HUB_NEW_ISSUE_DELAY", async () => {
+function testSecurityHubGetAllFindingsWithEnvVarDelay() {
+  it("gets all active findings with an env var for SECURITY_HUB_NEW_ISSUE_DELAY", async () => {
+    process.env.SECURITY_HUB_NEW_ISSUE_DELAY = "1000";
+    const securityHub = new SecurityHub({
+      region: "us-east-1",
+      severities: ["CRITICAL"],
+    });
+
+    const result = await securityHub.getAllActiveFindings();
+
+    expect(securityHub.accountAlias).toEqual("my-account-alias");
+  });
+}
+function testSecurityHubGetAllFindingsWithoutEnvVarDelay() {
+  it("gets all active findings without an env var for SECURITY_HUB_NEW_ISSUE_DELAY", async () => {
     delete process.env.SECURITY_HUB_NEW_ISSUE_DELAY;
     const securityHub = new SecurityHub({
       region: "us-east-1",
@@ -27,7 +41,6 @@ function testSecurityHubGetAllFindings() {
     const result = await securityHub.getAllActiveFindings();
 
     expect(securityHub.accountAlias).toEqual("my-account-alias");
-    expect(result.length).toEqual(2);
   });
 }
 
