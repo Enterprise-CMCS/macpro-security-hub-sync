@@ -1,9 +1,8 @@
-import { it, describe, expect, vi } from "vitest";
+import { it, describe, expect } from "vitest";
 import { AxiosMock } from "./mockClients";
 import JiraClient from "jira-client";
 import { Jira } from "../libs";
 import * as mockResponses from "./mockResponses";
-import { AxiosRequestConfig } from "axios";
 
 describe("Jira tests", () => {
   testJiraClientSearchJira();
@@ -70,14 +69,6 @@ function testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject() {
 function testErrorRemovingWatcherFromJiraIssue() {
   it("Error removing watcher from Jira issue", async () => {
     const axiosInstance = new AxiosMock();
-
-    vi.mock("axios", () => {
-      return {
-        default: async function (config: AxiosRequestConfig) {
-          return axiosInstance.request(config);
-        },
-      };
-    });
 
     const jira = new Jira();
 
