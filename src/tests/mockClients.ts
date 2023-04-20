@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 // IAM
-const iamClient = mockClient(IAMClient);
+export const iamClient = mockClient(IAMClient);
 beforeEach(() => {
   iamClient
     .on(ListAccountAliasesCommand, {})
