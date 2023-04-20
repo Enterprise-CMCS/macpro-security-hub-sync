@@ -140,6 +140,7 @@ describe("SecurityHubJiraSync", () => {
       jira.getAllSecurityHubIssuesInJiraProject(["some-label"])
     ).rejects.toThrow();
   });
+
   it("getAllSecurityHubIssuesInJiraProject throws exception", async () => {
     const jira = new Jira();
 
@@ -172,6 +173,21 @@ describe("SecurityHubJiraSync", () => {
       await jira.removeCurrentUserAsWatcher("ISSUE-123");
     } catch (error) {
       expect(error.message).toContain("Test error");
+    }
+  });
+
+  it("Error closing Jira issue", async () => {
+    const jira = new Jira();
+
+    // Mock the JiraClient to throw an error when transitioning an issue
+    jira.jira.transitionIssue = async () => {
+      throw new Error("Error transitioning issue");
+    };
+
+    try {
+      await jira.closeIssue("TEST-1");
+    } catch (error) {
+      expect(error.message).toContain("Error closing issue");
     }
   });
 });
