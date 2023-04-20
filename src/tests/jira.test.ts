@@ -37,7 +37,9 @@ function testJiraClientSearchHandlesZeroResults() {
       return { issues: [] };
     };
 
-    const results = await jira.getAllSecurityHubIssuesInJiraProject(["123"]);
+    const results = await jira.getAllSecurityHubIssuesInJiraProject([
+      "123456789012",
+    ]);
 
     expect(results).toHaveLength(0);
   });
