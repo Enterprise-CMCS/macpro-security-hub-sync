@@ -6,6 +6,7 @@ import * as mockResponses from "./mockResponses";
 
 describe("Jira tests", () => {
   testJiraClientSearchJira();
+  testJiraClientSearchHandlesZeroResults();
   testJiraLibSearchWithClosedStatuses();
   testThrowsErrorIfSearchQueryMissingAwsAccountId();
   testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject();
@@ -24,6 +25,21 @@ function testJiraClientSearchJira() {
       'project = TEST AND labels = security-hub AND status not in ("Done")';
     const result = await jira.searchJira(jqlString, {});
     expect(result).toEqual(mockResponses.searchJiraResponse);
+  });
+}
+
+function testJiraClientSearchHandlesZeroResults() {
+  it("Successfully handles a search with zero results", async () => {
+    const jira = new Jira();
+
+    // Mock the JiraClient to return an empty array when searching for issues
+    jira.jira.searchJira = async () => {
+      return { issues: [] };
+    };
+
+    const results = await jira.getAllSecurityHubIssuesInJiraProject(["123"]);
+
+    expect(results).toHaveLength(0);
   });
 }
 
