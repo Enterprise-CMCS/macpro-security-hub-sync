@@ -37,6 +37,24 @@ afterEach(() => {
 
 // ******** tests ********
 describe("SecurityHubJiraSync", () => {
+  testJiraClientSearchJira();
+  testSecurityHubJiraSyncSync();
+  testPassesEpicKey();
+  testDoesNotPassEpicKey();
+  testCreatesExpectedJQLQuery();
+  testJiraLibUsesDone();
+  testMissingRequiredEnvVar();
+  testNoNewJiraIssuesForNoFindings();
+  testThrowsExceptionForInvalidSeverity();
+  testThrowsErrorForInvalidAwsAccountId();
+  testThrowsErrorForStsGetCallerIdentityError();
+  testThrowsErrorIfSearchQueryMissingAwsAccountId();
+  testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject();
+  testErrorRemovingWatcherFromJiraIssue();
+  testErrorClosingJiraIssue();
+});
+
+function testJiraClientSearchJira() {
   it("JiraClient.searchJira should return expected search results", async () => {
     const jira = new JiraClient({ host: "" });
     const jqlString =
@@ -44,24 +62,32 @@ describe("SecurityHubJiraSync", () => {
     const result = await jira.searchJira(jqlString, {});
     expect(result).toEqual(mockResponses.searchJiraResponse);
   });
+}
 
+function testSecurityHubJiraSyncSync() {
   it("SecurityHubJiraSync.sync should complete without error", async () => {
     const sync = new SecurityHubJiraSync({});
     await expect(sync.sync()).resolves.not.toThrow();
   });
+}
 
+function testPassesEpicKey() {
   it("passes epic key when creating an issue", async () => {
     const sync = new SecurityHubJiraSync({ epicKey: "ABC-123" });
     await sync.sync();
     expect(jiraAddNewIssueCalls[0].fields.parent.key).toBe("ABC-123");
   });
+}
 
+function testDoesNotPassEpicKey() {
   it("doesn't pass epic key if it isn't set", async () => {
     const sync = new SecurityHubJiraSync({});
     await sync.sync();
     expect(jiraAddNewIssueCalls[0].fields.parent).toBeUndefined();
   });
+}
 
+function testCreatesExpectedJQLQuery() {
   it("creates the expected JQL query when searching for Jira issues", async () => {
     const sync = new SecurityHubJiraSync({
       region: Constants.TEST_AWS_REGION,
@@ -79,20 +105,26 @@ describe("SecurityHubJiraSync", () => {
       expect.arrayContaining(expectedQueryParts)
     );
   });
+}
 
+function testJiraLibUsesDone() {
   it('Jira lib should use ["Done"] for JIRA_CLOSED_STATUSES if the environment variable is not set', async () => {
     delete process.env.JIRA_CLOSED_STATUSES;
     const jira = new Jira();
     expect(jira.jiraClosedStatuses).toEqual(["Done"]);
   });
+}
 
+function testMissingRequiredEnvVar() {
   it("Missing a required environment variable", () => {
     delete process.env.JIRA_PROJECT;
     expect(() => new Jira()).toThrow(
       "Missing required environment variables: JIRA_PROJECT"
     );
   });
+}
 
+function testNoNewJiraIssuesForNoFindings() {
   it("does not create new Jira issues if no findings are returned from Security Hub", async () => {
     sHClient.on(GetFindingsCommand, {}).resolvesOnce({
       Findings: [],
@@ -101,7 +133,9 @@ describe("SecurityHubJiraSync", () => {
     await expect(sync.sync()).resolves.not.toThrow();
     expect(jiraAddNewIssueCalls).toEqual([]);
   });
+}
 
+function testThrowsExceptionForInvalidSeverity() {
   it("Throws an exception for invalid severity", async () => {
     sHClient.on(GetFindingsCommand, {}).resolves({
       Findings: [
@@ -113,7 +147,9 @@ describe("SecurityHubJiraSync", () => {
     const sync = new SecurityHubJiraSync({});
     await expect(sync.sync()).rejects.toThrow("Invalid severity: test");
   });
+}
 
+function testThrowsErrorForInvalidAwsAccountId() {
   it("throws an error when the AWS Account ID is invalid or missing", async () => {
     stsClient
       .on(GetCallerIdentityCommand, {})
@@ -124,7 +160,9 @@ describe("SecurityHubJiraSync", () => {
       "ERROR:  An issue was encountered when"
     );
   });
+}
 
+function testThrowsErrorForStsGetCallerIdentityError() {
   it("throws an error when STS GetCallerIdentity throws an error", async () => {
     stsClient.on(GetCallerIdentityCommand, {}).rejects("error");
 
@@ -133,14 +171,18 @@ describe("SecurityHubJiraSync", () => {
       "Error getting AWS Account ID: error"
     );
   });
+}
 
+function testThrowsErrorIfSearchQueryMissingAwsAccountId() {
   it("throws an error if searchQuery is missing AWS account ID label", async () => {
     const jira = new Jira();
     await expect(
       jira.getAllSecurityHubIssuesInJiraProject(["some-label"])
     ).rejects.toThrow();
   });
+}
 
+function testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject() {
   it("getAllSecurityHubIssuesInJiraProject throws exception", async () => {
     const jira = new Jira();
 
@@ -155,7 +197,9 @@ describe("SecurityHubJiraSync", () => {
       "Error getting Security Hub issues from Jira: Cannot read properties of undefined"
     );
   });
+}
 
+function testErrorRemovingWatcherFromJiraIssue() {
   it("Error removing watcher from Jira issue", async () => {
     const axiosInstance = new AxiosMock();
 
@@ -175,7 +219,9 @@ describe("SecurityHubJiraSync", () => {
       expect(error.message).toContain("Test error");
     }
   });
+}
 
+function testErrorClosingJiraIssue() {
   it("Error closing Jira issue", async () => {
     const jira = new Jira();
 
@@ -190,4 +236,4 @@ describe("SecurityHubJiraSync", () => {
       expect(error.message).toContain("Error closing issue");
     }
   });
-});
+}
