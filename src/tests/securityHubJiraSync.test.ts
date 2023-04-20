@@ -17,9 +17,13 @@ describe("SecurityHubJiraSync tests", () => {
   testThrowsExceptionForInvalidSeverity();
   testCreatesExpectedJQLQuery();
   testNoNewJiraIssuesForNoFindings();
+  testGetAwsAccountId();
   testThrowsErrorForInvalidAwsAccountId();
   testThrowsErrorForStsGetCallerIdentityError();
   testPassesEpicKey();
+  testErrorClosingIssue();
+  testErrorCreatingIssue();
+  testSecurityHubSeveritiesToJiraPriorities();
 });
 
 function testThrowsExceptionForInvalidSeverity() {
@@ -31,17 +35,17 @@ function testThrowsExceptionForInvalidSeverity() {
         } as AwsSecurityFinding,
       ],
     });
-    const sync = new SecurityHubJiraSync({});
-    await expect(sync.sync()).rejects.toThrow("Invalid severity: test");
+    const sHJS = new SecurityHubJiraSync({});
+    await expect(sHJS.sync()).rejects.toThrow("Invalid severity: test");
   });
 }
 
 function testCreatesExpectedJQLQuery() {
   it("creates the expected JQL query when searching for Jira issues", async () => {
-    const sync = new SecurityHubJiraSync({
+    const sHJS = new SecurityHubJiraSync({
       region: Constants.TEST_AWS_REGION,
     });
-    await sync.sync();
+    await sHJS.sync();
     const actualQueryParts = jiraSearchCalls[0].searchString.split(" AND ");
     const expectedQueryParts = [
       `labels = 'security-hub'`,
@@ -61,9 +65,20 @@ function testNoNewJiraIssuesForNoFindings() {
     sHClient.on(GetFindingsCommand, {}).resolvesOnce({
       Findings: [],
     });
-    const sync = new SecurityHubJiraSync({});
-    await expect(sync.sync()).resolves.not.toThrow();
+    const sHJS = new SecurityHubJiraSync({});
+    await expect(sHJS.sync()).resolves.not.toThrow();
     expect(jiraAddNewIssueCalls).toEqual([]);
+  });
+}
+
+function testGetAwsAccountId() {
+  it("succesfully gets AWS Account ID", async () => {
+    stsClient.on(GetCallerIdentityCommand, {}).resolves({ Account: "" });
+
+    const sHJS = new SecurityHubJiraSync({});
+    await expect(sHJS.sync()).rejects.toThrow(
+      "ERROR:  An issue was encountered when"
+    );
   });
 }
 
@@ -73,8 +88,8 @@ function testThrowsErrorForInvalidAwsAccountId() {
       .on(GetCallerIdentityCommand, {})
       .resolves({ Account: "invalid-account-id" });
 
-    const sync = new SecurityHubJiraSync({});
-    await expect(sync.sync()).rejects.toThrow(
+    const sHJS = new SecurityHubJiraSync({});
+    await expect(sHJS.sync()).rejects.toThrow(
       "ERROR:  An issue was encountered when"
     );
   });
@@ -84,8 +99,8 @@ function testThrowsErrorForStsGetCallerIdentityError() {
   it("throws an error when STS GetCallerIdentity throws an error", async () => {
     stsClient.on(GetCallerIdentityCommand, {}).rejects("error");
 
-    const sync = new SecurityHubJiraSync({});
-    await expect(sync.sync()).rejects.toThrow(
+    const sHJS = new SecurityHubJiraSync({});
+    await expect(sHJS.sync()).rejects.toThrow(
       "Error getting AWS Account ID: error"
     );
   });
@@ -93,8 +108,57 @@ function testThrowsErrorForStsGetCallerIdentityError() {
 
 function testPassesEpicKey() {
   it("passes epic key when creating an issue", async () => {
-    const sync = new SecurityHubJiraSync({ epicKey: "ABC-123" });
-    await sync.sync();
+    const sHJS = new SecurityHubJiraSync({ epicKey: "ABC-123" });
+    await sHJS.sync();
     expect(jiraAddNewIssueCalls[0].fields.parent.key).toBe("ABC-123");
+  });
+}
+
+function testErrorClosingIssue() {
+  it("testing error closing Jira issue", async () => {
+    const sHJS = new SecurityHubJiraSync();
+    const jiraIssues = [{ fields: { summary: "test-issue" }, key: "ABC-123" }];
+    const shFindings = [{ title: "test-finding" }];
+
+    // mock the jira.closeIssue function to throw an error
+    sHJS.jira.closeIssue = () => {
+      throw new Error("Test error");
+    };
+
+    await expect(
+      sHJS.closeIssuesForResolvedFindings(jiraIssues, shFindings)
+    ).rejects.toThrow(
+      "Error closing Jira issue for resolved finding: Test error"
+    );
+  });
+}
+
+function testErrorCreatingIssue() {
+  it("testing error creating Jira issue", async () => {
+    const sHJS = new SecurityHubJiraSync();
+
+    // mock the jira.createNewIssue function to throw an error
+    sHJS.jira.createNewIssue = ({}) => {
+      throw new Error("Test error");
+    };
+
+    await expect(sHJS.createJiraIssueFromFinding({}, [])).rejects.toThrow(
+      "Error creating Jira issue from finding: Test error"
+    );
+  });
+}
+
+function testSecurityHubSeveritiesToJiraPriorities() {
+  it("testing security hub severities to jira priorities", async () => {
+    const sHJS = new SecurityHubJiraSync();
+    [
+      ["INFORMATIONAL", "5"],
+      ["LOW", "4"],
+      ["MEDIUM", "3"],
+      ["HIGH", "2"],
+      ["CRITICAL", "1"],
+    ].forEach(([severity, priority]) => {
+      expect(sHJS.getPriorityNumber(severity)).toEqual(priority);
+    });
   });
 }
