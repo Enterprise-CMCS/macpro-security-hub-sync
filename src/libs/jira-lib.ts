@@ -5,7 +5,7 @@ import axios from "axios";
 dotenv.config();
 
 export class Jira {
-  readonly jira;
+  private readonly jira;
   jiraClosedStatuses: string[];
 
   constructor() {
