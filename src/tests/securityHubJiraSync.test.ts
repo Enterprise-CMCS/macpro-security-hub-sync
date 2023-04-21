@@ -31,6 +31,7 @@ function testThrowsExceptionForInvalidSeverity() {
     sHClient.on(GetFindingsCommand, {}).resolves({
       Findings: [
         {
+          Title: "sample ticket",
           Severity: { Label: "test" },
         } as AwsSecurityFinding,
       ],
