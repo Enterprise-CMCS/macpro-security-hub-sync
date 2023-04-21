@@ -51,6 +51,7 @@ beforeEach(() => {
         Findings: [
           {
             ...mockResponses.getFindingsCommandResponse.Findings[0],
+            Title: "test ticket2",
             ProductFields: {
               Title: "Test Finding",
               StandardsControlArn: `arn:aws:securityhub:${Constants.TEST_AWS_REGION}:${Constants.TEST_AWS_ACCOUNT_ID}:control/aws-foundational-security-best-practices/v/1.0.0/KMS.3`,

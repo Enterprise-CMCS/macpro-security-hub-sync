@@ -27,7 +27,7 @@ export const getFindingsCommandResponse = {
       AwsAccountId: undefined,
       CreatedAt: undefined,
       UpdatedAt: undefined,
-      Title: undefined,
+      Title: "test ticket",
       Description: undefined,
       Resources: undefined,
     },
