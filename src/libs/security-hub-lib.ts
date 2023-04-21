@@ -71,8 +71,8 @@ export class SecurityHub {
         ],
       };
 
-      // use a Set to store unique findings by title
-      const uniqueFindings = new Set<SecurityHubFinding>();
+      // use an object to store unique findings by title
+      const uniqueFindings: { [title: string]: SecurityHubFinding } = {};
 
       // use a variable to track pagination
       let nextToken: string | undefined = undefined;
@@ -87,17 +87,21 @@ export class SecurityHub {
         );
         if (response && response.Findings) {
           for (const finding of response.Findings) {
-            uniqueFindings.add(
-              this.awsSecurityFindingToSecurityHubFinding(finding)
-            );
+            const findingForJira =
+              this.awsSecurityFindingToSecurityHubFinding(finding);
+            if (findingForJira.title)
+              uniqueFindings[findingForJira.title] = findingForJira;
           }
         }
         if (response && response.NextToken) nextToken = response.NextToken;
         else nextToken = undefined;
       } while (nextToken);
 
-      return Array.from(uniqueFindings).map((finding) => {
-        return { accountAlias: this.accountAlias, ...finding };
+      return Object.values(uniqueFindings).map((finding) => {
+        return {
+          accountAlias: this.accountAlias,
+          ...finding,
+        };
       });
     } catch (e: any) {
       throw new Error(`Error getting Security Hub findings: ${e.message}`);
