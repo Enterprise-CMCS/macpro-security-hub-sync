@@ -50,7 +50,9 @@ export class SecurityHub {
 
       // delay for filtering out ephemeral issues
       const delayForNewIssues =
-        +process.env.SECURITY_HUB_NEW_ISSUE_DELAY! || 24 * 60 * 60 * 1000; // 1 day
+        typeof process.env.SECURITY_HUB_NEW_ISSUE_DELAY !== "undefined"
+          ? +process.env.SECURITY_HUB_NEW_ISSUE_DELAY
+          : 24 * 60 * 60 * 1000; // 1 day
       const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
 
       const filters = {
@@ -83,14 +85,15 @@ export class SecurityHub {
             NextToken: nextToken,
           })
         );
-        if (response.Findings) {
+        if (response && response.Findings) {
           for (const finding of response.Findings) {
             uniqueFindings.add(
               this.awsSecurityFindingToSecurityHubFinding(finding)
             );
           }
         }
-        nextToken = response.NextToken;
+        if (response && response.NextToken) nextToken = response.NextToken;
+        else nextToken = undefined;
       } while (nextToken);
 
       return Array.from(uniqueFindings).map((finding) => {
@@ -107,7 +110,6 @@ export class SecurityHub {
     if (!finding) return {};
     return {
       title: finding.Title,
-      createdAt: new Date(finding.CreatedAt ?? "").toLocaleString(),
       region: finding.Region,
       accountAlias: this.accountAlias,
       awsAccountId: finding.AwsAccountId,
