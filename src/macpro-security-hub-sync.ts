@@ -46,7 +46,8 @@ export class SecurityHubJiraSync {
     );
 
     // Step 2. Get all current findings from Security Hub
-    const shFindings = await this.securityHub.getAllActiveFindings();
+    const shFindingsObj = await this.securityHub.getAllActiveFindings();
+    const shFindings = Object.values(shFindingsObj);
 
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     updatesForReturn.push(
