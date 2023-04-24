@@ -9,7 +9,6 @@ import {
 
 export interface SecurityHubFinding {
   title?: string;
-  createdAt?: string;
   region?: string;
   accountAlias?: string;
   awsAccountId?: string;
@@ -114,7 +113,6 @@ export class SecurityHub {
     if (!finding) return {};
     return {
       title: finding.Title,
-      createdAt: new Date(finding.CreatedAt ?? "").toLocaleString(),
       region: finding.Region,
       accountAlias: this.accountAlias,
       awsAccountId: finding.AwsAccountId,
