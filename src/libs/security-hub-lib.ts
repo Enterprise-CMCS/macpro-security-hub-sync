@@ -50,7 +50,9 @@ export class SecurityHub {
 
       // delay for filtering out ephemeral issues
       const delayForNewIssues =
-        +process.env.SECURITY_HUB_NEW_ISSUE_DELAY! || 24 * 60 * 60 * 1000; // 1 day
+        typeof process.env.SECURITY_HUB_NEW_ISSUE_DELAY !== "undefined"
+          ? +process.env.SECURITY_HUB_NEW_ISSUE_DELAY
+          : 24 * 60 * 60 * 1000; // 1 day
       const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
 
       const filters = {
@@ -69,8 +71,8 @@ export class SecurityHub {
         ],
       };
 
-      // use a Set to store unique findings by title
-      const uniqueFindings = new Set<SecurityHubFinding>();
+      // use an object to store unique findings by title
+      const uniqueFindings: { [title: string]: SecurityHubFinding } = {};
 
       // use a variable to track pagination
       let nextToken: string | undefined = undefined;
@@ -83,18 +85,23 @@ export class SecurityHub {
             NextToken: nextToken,
           })
         );
-        if (response.Findings) {
+        if (response && response.Findings) {
           for (const finding of response.Findings) {
-            uniqueFindings.add(
-              this.awsSecurityFindingToSecurityHubFinding(finding)
-            );
+            const findingForJira =
+              this.awsSecurityFindingToSecurityHubFinding(finding);
+            if (findingForJira.title)
+              uniqueFindings[findingForJira.title] = findingForJira;
           }
         }
-        nextToken = response.NextToken;
+        if (response && response.NextToken) nextToken = response.NextToken;
+        else nextToken = undefined;
       } while (nextToken);
 
-      return Array.from(uniqueFindings).map((finding) => {
-        return { accountAlias: this.accountAlias, ...finding };
+      return Object.values(uniqueFindings).map((finding) => {
+        return {
+          accountAlias: this.accountAlias,
+          ...finding,
+        };
       });
     } catch (e: any) {
       throw new Error(`Error getting Security Hub findings: ${e.message}`);
