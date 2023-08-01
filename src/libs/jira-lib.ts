@@ -22,7 +22,7 @@ export class Jira {
       host: process.env.JIRA_HOST!,
       port: "443",
       username: process.env.JIRA_USERNAME,
-      password: process.env.JIRA_TOKEN,
+      bearer: process.env.JIRA_TOKEN,
       apiVersion: "2",
       strictSSL: true,
     });
