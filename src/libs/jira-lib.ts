@@ -27,7 +27,6 @@ export class Jira {
     }
     if(process.env.JIRA_HOST?.includes("jiraent")){
       jiraParams.bearer = process.env.JIRA_TOKEN;
-      jiraParams.apiVersion = "3"
     }
     this.jira = new JiraClient(jiraParams);
   }
