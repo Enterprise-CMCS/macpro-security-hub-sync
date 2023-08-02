@@ -104,6 +104,7 @@ export class Jira {
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
     const searchOptions: JiraClient.SearchQuery = {};
+    console.log(fullQuery,searchOptions);
     try {
       do {
         results = await this.jira.searchJira(fullQuery, searchOptions);
