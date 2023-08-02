@@ -1,4 +1,4 @@
-import JiraClient, { IssueObject } from "jira-client";
+import JiraClient, { IssueObject, JiraApiOptions } from "jira-client";
 import * as dotenv from "dotenv";
 import axios from "axios";
 
@@ -16,16 +16,20 @@ export class Jira {
           status.trim()
         )
       : ["Done"];
-
-    this.jira = new JiraClient({
+    const jiraParams: JiraApiOptions = {
       protocol: "https",
       host: process.env.JIRA_HOST!,
       port: "443",
       username: process.env.JIRA_USERNAME,
-      bearer: process.env.JIRA_TOKEN,
+      password:process.env.JIRA_TOKEN,
       apiVersion: "2",
       strictSSL: true,
-    });
+    }
+    if(process.env.JIRA_HOST?.includes("jiraent")){
+      jiraParams.bearer = process.env.JIRA_TOKEN;
+      jiraParams.apiVersion = "3"
+    }
+    this.jira = new JiraClient(jiraParams);
   }
 
   async removeCurrentUserAsWatcher(issueKey: string) {
