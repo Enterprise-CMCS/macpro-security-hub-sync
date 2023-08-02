@@ -29,6 +29,7 @@ export class Jira {
       jiraParams.bearer = process.env.JIRA_TOKEN;
     }
     this.jira = new JiraClient(jiraParams);
+    this.jira.getCurrentUser().then((data)=>console.log("user", data)).catch((e)=>{console.log(e)})
   }
 
   async removeCurrentUserAsWatcher(issueKey: string) {
