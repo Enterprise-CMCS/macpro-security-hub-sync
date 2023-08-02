@@ -107,6 +107,8 @@ export class Jira {
     console.log(fullQuery,searchOptions);
     try {
       do {
+        const user = await this.jira.getCurrentUser();
+        console.log(user)
         results = await this.jira.searchJira(fullQuery, searchOptions);
         allIssues = allIssues.concat(results.issues);
         totalIssuesReceived += results.issues.length;
