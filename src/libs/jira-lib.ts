@@ -1,6 +1,6 @@
 import JiraClient, { IssueObject, JiraApiOptions } from "jira-client";
 import * as dotenv from "dotenv";
-import axios from "axios";
+import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
 
 dotenv.config();
 
@@ -37,14 +37,21 @@ export class Jira {
       const currentUser = await this.jira.getCurrentUser();
 
       // Remove the current user as a watcher
+      const axiosHeader  = {
+        Authorization: ''
+      };
+      if(process.env.JIRA_HOST?.includes('jiraent')){
+        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`
+      }
+      else{
+        axiosHeader["Authorization"] = `Basic ${Buffer.from(
+          `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
+        ).toString("base64")}`
+      }
       await axios({
         method: "DELETE",
         url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
-        headers: {
-          Authorization: `Basic ${Buffer.from(
-            `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
-          ).toString("base64")}`,
-        },
+        headers: axiosHeader,
         params: {
           accountId: currentUser.accountId,
         },
@@ -108,8 +115,6 @@ export class Jira {
     console.log(fullQuery,searchOptions);
     try {
       do {
-        const user = await this.jira.getCurrentUser();
-        console.log(user)
         results = await this.jira.searchJira(fullQuery, searchOptions);
         allIssues = allIssues.concat(results.issues);
         totalIssuesReceived += results.issues.length;
