@@ -21,15 +21,15 @@ export class Jira {
       host: process.env.JIRA_HOST!,
       port: "443",
       username: process.env.JIRA_USERNAME,
-      password:process.env.JIRA_TOKEN,
       apiVersion: "2",
       strictSSL: true,
     }
     if(process.env.JIRA_HOST?.includes("jiraent")){
       jiraParams.bearer = process.env.JIRA_TOKEN;
+    } else {
+      jiraParams.password = process.env.JIRA_TOKEN;
     }
     this.jira = new JiraClient(jiraParams);
-    this.jira.getCurrentUser().then((data)=>console.log("user", data)).catch((e)=>{console.log(e)})
   }
 
   async removeCurrentUserAsWatcher(issueKey: string) {
