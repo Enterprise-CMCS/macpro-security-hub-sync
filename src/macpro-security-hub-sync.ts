@@ -227,11 +227,14 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityNumber(finding.severity, process.env.JIRA_HOST?.includes("jiraent")) : 3, // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity ? this.getPriorityNumber(finding.severity) :"3", // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
     };
+    if(finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
+      newIssueData.fields.priority = { name: this.getPriorityNumber(finding.severity, true)};
+    }
     if (this.epicKey) {
       newIssueData.fields.parent = { key: this.epicKey };
     }
