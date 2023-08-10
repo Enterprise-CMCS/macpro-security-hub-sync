@@ -191,7 +191,10 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  getPriorityNumber = (severity: string): string => {
+  getPriorityNumber = (severity: string, isEnterprise: boolean = false): string => {
+    if(isEnterprise){
+      return severity.charAt(0).toUpperCase() + severity.slice(1)
+    }
     switch (severity) {
       case "INFORMATIONAL":
         return "5";
@@ -224,7 +227,7 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityNumber(finding.severity) : 3, // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity ? this.getPriorityNumber(finding.severity, process.env.JIRA_HOST?.includes("jiraent")) : 3, // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
