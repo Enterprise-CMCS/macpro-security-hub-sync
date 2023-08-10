@@ -193,7 +193,7 @@ export class SecurityHubJiraSync {
 
   getPriorityNumber = (severity: string, isEnterprise: boolean = false): string => {
     if(isEnterprise){
-      return severity.charAt(0).toUpperCase() + severity.slice(1)
+      return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase()
     }
     switch (severity) {
       case "INFORMATIONAL":
