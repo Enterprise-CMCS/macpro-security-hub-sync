@@ -98,15 +98,19 @@ export class SecurityHubJiraSync {
     );
     try {
       // close all security-hub labeled Jira issues that do not have an active finding
-      for (var i = 0; i < jiraIssues.length; i++) {
-        if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
-          await this.jira.closeIssue(jiraIssues[i].key);
-          updatesForReturn.push({
-            action: "closed",
-            webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
-            summary: jiraIssues[i].fields.summary,
-          });
+      if(process.env.AUTO_CLOSE){
+        for (var i = 0; i < jiraIssues.length; i++) {
+          if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
+            await this.jira.closeIssue(jiraIssues[i].key);
+            updatesForReturn.push({
+              action: "closed",
+              webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
+              summary: jiraIssues[i].fields.summary,
+            });
+          }
         }
+      } else {
+        console.log("Skipping auto closing...")
       }
     } catch (e: any) {
       throw new Error(
