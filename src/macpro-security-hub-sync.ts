@@ -98,7 +98,7 @@ export class SecurityHubJiraSync {
     );
     try {
       // close all security-hub labeled Jira issues that do not have an active finding
-      if(process.env.AUTO_CLOSE){
+      if(process.env.AUTO_CLOSE !== 'false'){
         for (var i = 0; i < jiraIssues.length; i++) {
           if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
             await this.jira.closeIssue(jiraIssues[i].key);
