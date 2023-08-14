@@ -106,6 +106,7 @@ export class SecurityHubJiraSync {
               webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
               summary: jiraIssues[i].fields.summary,
             });
+            const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,`As of ${Date.now()} this SH finding has been marked resolved`)
           }
         }
       } else {
@@ -124,6 +125,7 @@ export class SecurityHubJiraSync {
                   },
                 }
               );
+              const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,`As of ${Date.now()} this SH finding has been marked resolved`)
             } catch (e) {
               console.log(
                 `Title of ISSUE with id ${

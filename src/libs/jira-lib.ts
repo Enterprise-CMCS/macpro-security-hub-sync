@@ -150,6 +150,14 @@ export class Jira {
       console.error('Error updating issue title:', error);
     }
   }
+  async addCommentToIssueById(issueId:string, comment:string) {
+    try {
+      const response = await this.jira.addComment(issueId, comment);
+      console.log('Comment added successfully:', response);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  }
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
