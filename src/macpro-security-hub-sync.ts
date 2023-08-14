@@ -96,6 +96,7 @@ export class SecurityHubJiraSync {
       )
     );
     try {
+      const makeComment = () => `As of ${new Date(Date.now()).toDateString()}, this Security Hub finding has been marked resolved`
       // close all security-hub labeled Jira issues that do not have an active finding
       if (process.env.AUTO_CLOSE !== "false") {
         for (var i = 0; i < jiraIssues.length; i++) {
@@ -106,7 +107,7 @@ export class SecurityHubJiraSync {
               webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
               summary: jiraIssues[i].fields.summary,
             });
-            const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,`As of ${new Date(Date.now()).toDateString()}, this Security Hub finding has been marked resolved`)
+            const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,makeComment())
           }
         }
       } else {
@@ -125,7 +126,7 @@ export class SecurityHubJiraSync {
                   },
                 }
               );
-              const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,`As of ${new Date(Date.now()).toDateString()}, this Security Hub finding has been marked resolved`)
+              const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,makeComment())
             } catch (e) {
               console.log(
                 `Title of ISSUE with id ${
