@@ -142,7 +142,14 @@ export class Jira {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
   }
-
+  async updateIssueTitleById(issueId:string, updatedIssue:Partial<IssueObject>) {
+    try {
+      const response = await this.jira.updateIssue(issueId, updatedIssue);
+      console.log('Issue title updated successfully:', response);
+    } catch (error) {
+      console.error('Error updating issue title:', error);
+    }
+  }
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {

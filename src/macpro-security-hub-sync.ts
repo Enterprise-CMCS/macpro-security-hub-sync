@@ -85,7 +85,6 @@ export class SecurityHubJiraSync {
     }
     return accountID;
   }
-
   async closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[]
@@ -98,7 +97,7 @@ export class SecurityHubJiraSync {
     );
     try {
       // close all security-hub labeled Jira issues that do not have an active finding
-      if(process.env.AUTO_CLOSE !== 'false'){
+      if (process.env.AUTO_CLOSE !== "false") {
         for (var i = 0; i < jiraIssues.length; i++) {
           if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
             await this.jira.closeIssue(jiraIssues[i].key);
@@ -110,7 +109,30 @@ export class SecurityHubJiraSync {
           }
         }
       } else {
-        console.log("Skipping auto closing...")
+        console.log("Skipping auto closing...");
+        for (var i = 0; i < jiraIssues.length; i++) {
+          if (
+            !expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary) &&
+            !jiraIssues[i].fields.summary.includes("Resolved") // skip already resolved issues
+          ) {
+            try {
+              const res = await this.jira.updateIssueTitleById(
+                jiraIssues[i].id,
+                {
+                  fields: {
+                    summary: `Resolved ${jiraIssues[i].fields.summary}`,
+                  },
+                }
+              );
+            } catch (e) {
+              console.log(
+                `Title of ISSUE with id ${
+                  jiraIssues[i].id
+                } is not changed with error: ${JSON.stringify(e)}`
+              );
+            }
+          }
+        }
       }
     } catch (e: any) {
       throw new Error(
@@ -195,9 +217,12 @@ export class SecurityHubJiraSync {
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
 
-  getPriorityNumber = (severity: string, isEnterprise: boolean = false): string => {
-    if(isEnterprise){
-      return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase()
+  getPriorityNumber = (
+    severity: string,
+    isEnterprise: boolean = false
+  ): string => {
+    if (isEnterprise) {
+      return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
     }
     switch (severity) {
       case "INFORMATIONAL":
@@ -231,13 +256,15 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityNumber(finding.severity) :"3", // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity ? this.getPriorityNumber(finding.severity) : "3", // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
     };
-    if(finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
-      newIssueData.fields.priority = { name: this.getPriorityNumber(finding.severity, true)};
+    if (finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
+      newIssueData.fields.priority = {
+        name: this.getPriorityNumber(finding.severity, true),
+      };
     }
     if (this.epicKey) {
       newIssueData.fields.parent = { key: this.epicKey };
