@@ -153,7 +153,6 @@ export class Jira {
   async addCommentToIssueById(issueId:string, comment:string) {
     try {
       const response = await this.jira.addComment(issueId, comment);
-      console.log('Comment added successfully:', response);
     } catch (error) {
       console.error('Error adding comment:', error);
     }
