@@ -204,13 +204,13 @@ export class Jira {
       const issue = await this.jira.findIssue(issueKey);
       do {
         const availableTransitions = await this.jira.listTransitions(issueKey);
-        const processedTransitions = [];
+        const processedTransitions: string[] = [];
         console.log(availableTransitions);
         if (availableTransitions.transitions.length > 0) {
           const targetTransitions = availableTransitions.transitions.filter(
             (transition: { name: string }) =>
               !opposedStatuses.includes(transition.name.toLowerCase()) &&
-              !targetTransitions.includes(transition.name.toLowerCase())
+              !processedTransitions.includes(transition.name.toLowerCase())
           );
           const transitionId = targetTransitions[0].id;
           processedTransitions.push(targetTransitions[0].name);
