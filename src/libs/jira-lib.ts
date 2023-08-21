@@ -1,4 +1,8 @@
-import JiraClient, { IssueObject, JiraApiOptions, TransitionObject } from "jira-client";
+import JiraClient, {
+  IssueObject,
+  JiraApiOptions,
+  TransitionObject,
+} from "jira-client";
 import * as dotenv from "dotenv";
 import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
 
@@ -23,8 +27,8 @@ export class Jira {
       username: process.env.JIRA_USERNAME,
       apiVersion: "2",
       strictSSL: true,
-    }
-    if(process.env.JIRA_HOST?.includes("jiraent")){
+    };
+    if (process.env.JIRA_HOST?.includes("jiraent")) {
       jiraParams.bearer = process.env.JIRA_TOKEN;
     } else {
       jiraParams.password = process.env.JIRA_TOKEN;
@@ -37,16 +41,15 @@ export class Jira {
       const currentUser = await this.jira.getCurrentUser();
 
       // Remove the current user as a watcher
-      const axiosHeader  = {
-        Authorization: ''
+      const axiosHeader = {
+        Authorization: "",
       };
-      if(process.env.JIRA_HOST?.includes('jiraent')){
-        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`
-      }
-      else{
+      if (process.env.JIRA_HOST?.includes("jiraent")) {
+        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
+      } else {
         axiosHeader["Authorization"] = `Basic ${Buffer.from(
           `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
-        ).toString("base64")}`
+        ).toString("base64")}`;
       }
       await axios({
         method: "DELETE",
@@ -112,7 +115,7 @@ export class Jira {
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
     const searchOptions: JiraClient.SearchQuery = {};
-    console.log(fullQuery,searchOptions);
+    console.log(fullQuery, searchOptions);
     try {
       do {
         results = await this.jira.searchJira(fullQuery, searchOptions);
@@ -142,73 +145,88 @@ export class Jira {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
   }
-  async updateIssueTitleById(issueId:string, updatedIssue:Partial<IssueObject>) {
+  async updateIssueTitleById(
+    issueId: string,
+    updatedIssue: Partial<IssueObject>
+  ) {
     try {
       const response = await this.jira.updateIssue(issueId, updatedIssue);
-      console.log('Issue title updated successfully:', response);
+      console.log("Issue title updated successfully:", response);
     } catch (error) {
-      console.error('Error updating issue title:', error);
+      console.error("Error updating issue title:", error);
     }
   }
-  async addCommentToIssueById(issueId:string, comment:string) {
+  async addCommentToIssueById(issueId: string, comment: string) {
     try {
       const response = await this.jira.addComment(issueId, comment);
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
     }
   }
-  async findPathToClosure (transitions: any, currentStatus: string) {
+  async findPathToClosure(transitions: any, currentStatus: string) {
     const visited = new Set();
-    const queue: { path: string[]; status: string }[] = [{ path: [], status: currentStatus }];
-  
+    const queue: { path: string[]; status: string }[] = [
+      { path: [], status: currentStatus },
+    ];
+
     while (queue.length > 0) {
       const { path, status } = queue.shift()!;
       visited.add(status);
-  
-      const possibleTransitions = transitions.filter((transition: { from: { name: string; }; }) =>
-        transition.from.name === status
+
+      const possibleTransitions = transitions.filter(
+        (transition: { from: { name: string } }) =>
+          transition.from.name === status
       );
-  
+
       for (const transition of possibleTransitions) {
         const newPath = [...path, transition.id];
         const newStatus = transition.to.name;
-  
-        if (newStatus.toLowerCase().includes('close') || newStatus.toLowerCase().includes('done')) {
+
+        if (
+          newStatus.toLowerCase().includes("close") ||
+          newStatus.toLowerCase().includes("done")
+        ) {
           return newPath; // Found a path to closure
         }
-  
+
         if (!visited.has(newStatus)) {
           queue.push({ path: newPath, status: newStatus });
         }
       }
     }
-  
+
     return []; // No valid path to closure found
   }
 
-  async completeWorkflow(issueKey:string) {
+  async completeWorkflow(issueKey: string) {
+    const opposedStatuses = ["canceled", "backout", "rejected"];
     try {
       const issue = await this.jira.findIssue(issueKey);
-      const currentStatus = issue.fields.status.name;
-      const availableTransitions = await this.jira.listTransitions(issueKey);
-  
-      const pathToClosure = await this.findPathToClosure(availableTransitions, currentStatus);
-  
-      if (pathToClosure.length > 0) {
-        for (const transitionId of pathToClosure) {
-          await this.jira.transitionIssue(issueKey, { transition: { id: transitionId } });
+      do {
+        const availableTransitions = await this.jira.listTransitions(issueKey);
+        const processedTransitions = [];
+        console.log(availableTransitions);
+        if (availableTransitions.transitions.length > 0) {
+          const targetTransitions = availableTransitions.transitions.filter(
+            (transition: { name: string }) =>
+              !opposedStatuses.includes(transition.name.toLowerCase()) &&
+              !targetTransitions.includes(transition.name.toLowerCase())
+          );
+          const transitionId = targetTransitions[0].id;
+          processedTransitions.push(targetTransitions[0].name);
+          await this.jira.transitionIssue(issueKey, {
+            transition: { id: transitionId },
+          });
           console.log(`Transitioned issue ${issueKey} to the next step.`);
+        } else {
+          break;
         }
-  
-        console.log(`Issue ${issueKey} has been closed.`);
-      } else {
-        console.log(`No valid path to close issue ${issueKey} from ${currentStatus}.`);
-      }
-    } catch (error) {
-      console.error(`Error completing workflow for issue ${issueKey}:`, error);
+      } while (true);
+    } catch (e) {
+      console.log("Error completing the workflow ", e);
     }
-  }  
-  
+  }
+
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
@@ -218,7 +236,8 @@ export class Jira {
       );
 
       if (!doneTransition) {
-       this.completeWorkflow(issueKey)
+        this.completeWorkflow(issueKey);
+        return;
       }
 
       await this.jira.transitionIssue(issueKey, {
