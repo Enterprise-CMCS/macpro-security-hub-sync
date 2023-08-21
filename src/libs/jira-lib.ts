@@ -1,4 +1,4 @@
-import JiraClient, { IssueObject, JiraApiOptions } from "jira-client";
+import JiraClient, { IssueObject, JiraApiOptions, TransitionObject } from "jira-client";
 import * as dotenv from "dotenv";
 import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
 
@@ -157,6 +157,58 @@ export class Jira {
       console.error('Error adding comment:', error);
     }
   }
+  async findPathToClosure (transitions: any, currentStatus: string) {
+    const visited = new Set();
+    const queue: { path: string[]; status: string }[] = [{ path: [], status: currentStatus }];
+  
+    while (queue.length > 0) {
+      const { path, status } = queue.shift()!;
+      visited.add(status);
+  
+      const possibleTransitions = transitions.filter((transition: { from: { name: string; }; }) =>
+        transition.from.name === status
+      );
+  
+      for (const transition of possibleTransitions) {
+        const newPath = [...path, transition.id];
+        const newStatus = transition.to.name;
+  
+        if (newStatus.toLowerCase().includes('close') || newStatus.toLowerCase().includes('done')) {
+          return newPath; // Found a path to closure
+        }
+  
+        if (!visited.has(newStatus)) {
+          queue.push({ path: newPath, status: newStatus });
+        }
+      }
+    }
+  
+    return []; // No valid path to closure found
+  }
+
+  async completeWorkflow(issueKey:string) {
+    try {
+      const issue = await this.jira.findIssue(issueKey);
+      const currentStatus = issue.fields.status.name;
+      const availableTransitions = await this.jira.listTransitions(issueKey);
+  
+      const pathToClosure = await this.findPathToClosure(availableTransitions, currentStatus);
+  
+      if (pathToClosure.length > 0) {
+        for (const transitionId of pathToClosure) {
+          await this.jira.transitionIssue(issueKey, { transition: { id: transitionId } });
+          console.log(`Transitioned issue ${issueKey} to the next step.`);
+        }
+  
+        console.log(`Issue ${issueKey} has been closed.`);
+      } else {
+        console.log(`No valid path to close issue ${issueKey} from ${currentStatus}.`);
+      }
+    } catch (error) {
+      console.error(`Error completing workflow for issue ${issueKey}:`, error);
+    }
+  }  
+  
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
     try {
@@ -166,7 +218,7 @@ export class Jira {
       );
 
       if (!doneTransition) {
-        throw new Error(`Cannot find "Done" transition for issue ${issueKey}`);
+       this.completeWorkflow(issueKey)
       }
 
       await this.jira.transitionIssue(issueKey, {
