@@ -270,6 +270,7 @@ export class SecurityHubJiraSync {
     identifyingLabels: string[]
   ) {
     const priorities = await this.jira.getPriorityIdsInDescendingOrder()
+    console.log(priorities);
     const newIssueData: IssueObject = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,

@@ -34,11 +34,10 @@ export class Jira {
     }
     this.jira = new JiraClient(jiraParams);
   }
-  async  doesUserExist(accountId: string): Promise<boolean> {
+  async doesUserExist(accountId: string): Promise<boolean> {
     try {
-  
-      const user = await this.jira.getUser(accountId,'groups');
-  
+      const user = await this.jira.getUser(accountId, "groups");
+
       // User exists
       return true;
     } catch (err: any) {
@@ -149,10 +148,12 @@ export class Jira {
   async getPriorityIdsInDescendingOrder(): Promise<string[]> {
     try {
       const priorities = await this.jira.listPriorities();
-  
+
       // Get priority IDs in descending order
-      const descendingPriorityIds = priorities.map((priority: { id: any; }) => priority.id).reverse();
-  
+      const descendingPriorityIds = priorities
+        .map((priority: { id: any }) => priority.id)
+        .reverse();
+
       return descendingPriorityIds;
     } catch (err) {
       console.error(err);
@@ -161,10 +162,12 @@ export class Jira {
   }
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
-      const assignee = process.env.ASSIGNEE ?? '';
-      const isAssignee = await this.doesUserExist(assignee)
-      if(isAssignee){
-        issue.fields.assignee = {username: assignee}
+      const assignee = process.env.ASSIGNEE ?? "";
+      if (assignee) {
+        const isAssignee = await this.doesUserExist(assignee);
+        if (isAssignee) {
+          issue.fields.assignee = {accountId: assignee };
+        }
       }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
