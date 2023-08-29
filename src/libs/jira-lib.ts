@@ -14,7 +14,6 @@ export class Jira {
 
   constructor() {
     Jira.checkEnvVars();
-
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",").map((status) =>
           status.trim()
@@ -35,7 +34,24 @@ export class Jira {
     }
     this.jira = new JiraClient(jiraParams);
   }
-
+  async  doesUserExist(accountId: string): Promise<boolean> {
+    try {
+  
+      const user = await this.jira.getUser(accountId,'groups');
+  
+      // User exists
+      return true;
+    } catch (err: any) {
+      if (err.statusCode === 404) {
+        // User does not exist
+        return false;
+      } else {
+        // Handle other errors if needed
+        console.error(err);
+        return false;
+      }
+    }
+  }
   async removeCurrentUserAsWatcher(issueKey: string) {
     try {
       const currentUser = await this.jira.getCurrentUser();
@@ -133,6 +149,11 @@ export class Jira {
 
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
+      const assignee = process.env.ASSIGNEE ?? '';
+      const isAssignee = await this.doesUserExist(assignee)
+      if(isAssignee){
+        issue.fields.assignee = {accountId: assignee}
+      }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const newIssue = await this.jira.addNewIssue(issue);
