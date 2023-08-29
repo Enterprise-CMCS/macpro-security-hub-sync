@@ -164,7 +164,7 @@ export class Jira {
       const assignee = process.env.ASSIGNEE ?? '';
       const isAssignee = await this.doesUserExist(assignee)
       if(isAssignee){
-        issue.fields.assignee = {accountId: assignee}
+        issue.fields.assignee = {username: assignee}
       }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
