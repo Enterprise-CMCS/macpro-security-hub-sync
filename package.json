@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "NPM module to create Jira issues for all findings in Security Hub for the current AWS account..",
   "main": "./dist/index.js",
   "typings": "./dist/index.js",

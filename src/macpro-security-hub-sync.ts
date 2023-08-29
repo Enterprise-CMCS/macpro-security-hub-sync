@@ -219,7 +219,29 @@ export class SecurityHubJiraSync {
     ] = standardsControlArn.split(/[/:]+/);
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
-
+  getSeverityMapping = (severity:string)=>{
+    switch (severity) {
+      case "INFORMATIONAL":
+        return "5";
+      case "LOW":
+        return "4";
+      case "MEDIUM":
+        return "3";
+      case "HIGH":
+        return "2";
+      case "CRITICAL":
+        return "1";
+      default:
+        return "6";
+    }
+  }
+  getPriorityId = (severity:string, priorities:any[]) =>{
+    const severityLevel = parseInt(this.getSeverityMapping(severity))
+    if(severityLevel >= priorities.length){
+      return priorities[priorities.length-1]
+    }
+    return priorities[severityLevel-1]
+  }
   getPriorityNumber = (
     severity: string,
     isEnterprise: boolean = false
@@ -247,6 +269,7 @@ export class SecurityHubJiraSync {
     finding: SecurityHubFinding,
     identifyingLabels: string[]
   ) {
+    const priorities = await this.jira.getPriorityIdsInDescendingOrder()
     const newIssueData: IssueObject = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,
@@ -259,14 +282,14 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityNumber(finding.severity) : "3", // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity ? this.getPriorityId(finding.severity, priorities) : "3", // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
     };
     if (finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
       newIssueData.fields.priority = {
-        name: this.getPriorityNumber(finding.severity, true),
+        name: this.getPriorityId(finding.severity, priorities),
       };
     }
     if (this.epicKey) {

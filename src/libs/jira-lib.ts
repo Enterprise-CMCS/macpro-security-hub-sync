@@ -146,7 +146,19 @@ export class Jira {
     }
     return allIssues;
   }
-
+  async getPriorityIdsInDescendingOrder(): Promise<string[]> {
+    try {
+      const priorities = await this.jira.listPriorities();
+  
+      // Get priority IDs in descending order
+      const descendingPriorityIds = priorities.map((priority: { id: any; }) => priority.id).reverse();
+  
+      return descendingPriorityIds;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       const assignee = process.env.ASSIGNEE ?? '';
