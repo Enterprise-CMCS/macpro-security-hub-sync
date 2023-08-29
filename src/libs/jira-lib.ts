@@ -152,7 +152,6 @@ export class Jira {
       // Get priority IDs in descending order
       const descendingPriorityIds = priorities
         .map((priority: { id: any }) => priority.id)
-        .reverse();
 
       return descendingPriorityIds;
     } catch (err) {
@@ -166,7 +165,12 @@ export class Jira {
       if (assignee) {
         const isAssignee = await this.doesUserExist(assignee);
         if (isAssignee) {
-          issue.fields.assignee = {accountId: assignee };
+          if(process.env.JIRA_HOST?.includes("jiraent")){
+            issue.fields.assignee = {userId: assignee };
+          }
+          else{
+            issue.fields.assignee = {accountId: assignee };
+          }
         }
       }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
