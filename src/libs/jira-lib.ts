@@ -37,7 +37,6 @@ export class Jira {
   async doesUserExist(accountId: string): Promise<boolean> {
     try {
       const user = await this.jira.getUser(accountId, "groups");
-
       // User exists
       return true;
     } catch (err: any) {
@@ -45,6 +44,17 @@ export class Jira {
         // User does not exist
         return false;
       } else {
+        try {
+          const user = await this.jira.searchUsers({
+            username: accountId,
+            query: "",
+          });
+          return true;
+        } catch (e: any) {
+          // Handle other errors if needed
+          console.error(err);
+          return false;
+        }
         // Handle other errors if needed
         console.error(err);
         return false;
@@ -150,8 +160,9 @@ export class Jira {
       const priorities = await this.jira.listPriorities();
 
       // Get priority IDs in descending order
-      const descendingPriorityIds = priorities
-        .map((priority: { id: any }) => priority.id)
+      const descendingPriorityIds = priorities.map(
+        (priority: { id: any }) => priority.id
+      );
 
       return descendingPriorityIds;
     } catch (err) {
@@ -165,11 +176,10 @@ export class Jira {
       if (assignee) {
         const isAssignee = await this.doesUserExist(assignee);
         if (isAssignee) {
-          if(process.env.JIRA_HOST?.includes("jiraent")){
-            issue.fields.assignee = {username: assignee };
-          }
-          else{
-            issue.fields.assignee = {accountId: assignee };
+          if (process.env.JIRA_HOST?.includes("jiraent")) {
+            issue.fields.assignee = { username: assignee };
+          } else {
+            issue.fields.assignee = { accountId: assignee };
           }
         }
       }
