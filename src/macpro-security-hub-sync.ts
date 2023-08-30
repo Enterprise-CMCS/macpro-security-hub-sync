@@ -290,7 +290,7 @@ export class SecurityHubJiraSync {
     };
     if (finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
       newIssueData.fields.priority = {
-        name: this.getPriorityId(finding.severity, priorities),
+        name: this.getPriorityNumber(finding.severity, true),
       };
     }
     if (this.epicKey) {
