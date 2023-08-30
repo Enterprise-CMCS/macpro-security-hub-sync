@@ -48,10 +48,7 @@ export class SecurityHub {
       const currentTime = new Date();
 
       // delay for filtering out ephemeral issues
-      const delayForNewIssues =
-        typeof process.env.SECURITY_HUB_NEW_ISSUE_DELAY !== "undefined"
-          ? +process.env.SECURITY_HUB_NEW_ISSUE_DELAY
-          : 24 * 60 * 60 * 1000; // 1 day
+      const delayForNewIssues = 0; // 1 day
       const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
 
       const filters = {
