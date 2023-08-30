@@ -177,7 +177,7 @@ export class Jira {
         const isAssignee = await this.doesUserExist(assignee);
         if (isAssignee) {
           if (process.env.JIRA_HOST?.includes("jiraent")) {
-            issue.fields.assignee = { username: assignee };
+            issue.fields.assignee = { name: assignee };
           } else {
             issue.fields.assignee = { accountId: assignee };
           }
