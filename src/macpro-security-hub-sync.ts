@@ -241,7 +241,7 @@ export class SecurityHubJiraSync {
       case "CRITICAL":
         return "1";
       default:
-        return "6";
+        throw new Error(`Invalid severity: ${severity}`);
     }
   };
   getPriorityId = (severity: string, priorities: any[]) => {
