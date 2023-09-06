@@ -96,7 +96,10 @@ export class SecurityHubJiraSync {
       )
     );
     try {
-      const makeComment = () => `As of ${new Date(Date.now()).toDateString()}, this Security Hub finding has been marked resolved`
+      const makeComment = () =>
+        `As of ${new Date(
+          Date.now()
+        ).toDateString()}, this Security Hub finding has been marked resolved`;
       // close all security-hub labeled Jira issues that do not have an active finding
       if (process.env.AUTO_CLOSE !== "false") {
         for (var i = 0; i < jiraIssues.length; i++) {
@@ -107,7 +110,10 @@ export class SecurityHubJiraSync {
               webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
               summary: jiraIssues[i].fields.summary,
             });
-            const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,makeComment())
+            const comment = await this.jira.addCommentToIssueById(
+              jiraIssues[i].id,
+              makeComment()
+            );
           }
         }
       } else {
@@ -126,7 +132,10 @@ export class SecurityHubJiraSync {
                   },
                 }
               );
-              const comment  = await this.jira.addCommentToIssueById(jiraIssues[i].id,makeComment())
+              const comment = await this.jira.addCommentToIssueById(
+                jiraIssues[i].id,
+                makeComment()
+              );
             } catch (e) {
               console.log(
                 `Title of ISSUE with id ${
@@ -219,7 +228,7 @@ export class SecurityHubJiraSync {
     ] = standardsControlArn.split(/[/:]+/);
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
-  getSeverityMapping = (severity:string)=>{
+  getSeverityMapping = (severity: string) => {
     switch (severity) {
       case "INFORMATIONAL":
         return "5";
@@ -234,14 +243,14 @@ export class SecurityHubJiraSync {
       default:
         return "6";
     }
-  }
-  getPriorityId = (severity:string, priorities:any[]) =>{
-    const severityLevel = parseInt(this.getSeverityMapping(severity))
-    if(severityLevel >= priorities.length){
-      return priorities[priorities.length-1]
+  };
+  getPriorityId = (severity: string, priorities: any[]) => {
+    const severityLevel = parseInt(this.getSeverityMapping(severity));
+    if (severityLevel >= priorities.length) {
+      return priorities[priorities.length - 1];
     }
-    return priorities[severityLevel-1]
-  }
+    return priorities[severityLevel - 1];
+  };
   getPriorityNumber = (
     severity: string,
     isEnterprise: boolean = false
@@ -269,7 +278,7 @@ export class SecurityHubJiraSync {
     finding: SecurityHubFinding,
     identifyingLabels: string[]
   ) {
-    const priorities = await this.jira.getPriorityIdsInDescendingOrder()
+    const priorities = await this.jira.getPriorityIdsInDescendingOrder();
     console.log(priorities);
     const newIssueData: IssueObject = {
       fields: {
@@ -283,7 +292,9 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityId(finding.severity, priorities) : "3", // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity
+            ? this.getPriorityId(finding.severity, priorities)
+            : "3", // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
