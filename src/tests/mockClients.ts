@@ -102,20 +102,23 @@ vi.mock("jira-client", () => {
         return Promise.resolve(mockResponses.searchJiraResponse);
       }
       listPriorities() {
-        return [{id: "1", name:"High"}, {id:"2",name:"Medium"}]
+        return [
+          { id: "1", name: "High" },
+          { id: "2", name: "Medium" },
+        ];
       }
       findIssue() {
-        return {}
+        return {};
       }
       addComment() {
-        return
+        return;
       }
       async addNewIssue(issue: IssueObject) {
         jiraAddNewIssueCalls.push(issue);
         return Promise.resolve(mockResponses.addNewIssueJiraResponse);
       }
       async transitionIssue(issue: IssueObject) {
-        return { id: '2', name: 'Done' }
+        return { id: "2", name: "Done" };
       }
       getCurrentUser() {
         return "Current User";
