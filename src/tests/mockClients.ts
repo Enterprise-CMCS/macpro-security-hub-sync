@@ -107,9 +107,6 @@ vi.mock("jira-client", () => {
           { id: "2", name: "Medium" },
         ];
       }
-      findIssue() {
-        return {};
-      }
       addComment() {
         return;
       }
@@ -117,8 +114,11 @@ vi.mock("jira-client", () => {
         jiraAddNewIssueCalls.push(issue);
         return Promise.resolve(mockResponses.addNewIssueJiraResponse);
       }
+      async listTransitions(issueKey: string ){
+        return [{id:'2', name: 'Done'}]
+      }
       async transitionIssue(issue: IssueObject) {
-        return { id: "2", name: "Done" };
+        return;
       }
       getCurrentUser() {
         return "Current User";
