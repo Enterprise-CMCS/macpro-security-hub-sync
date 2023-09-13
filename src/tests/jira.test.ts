@@ -1,4 +1,4 @@
-import { it, describe, expect } from "vitest";
+import { it, describe, expect, vi, afterAll } from "vitest";
 import { AxiosMock } from "./mockClients";
 import JiraClient from "jira-client";
 import { Jira } from "../libs";
@@ -88,16 +88,24 @@ function testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject() {
 }
 
 function testErrorRemovingWatcherFromJiraIssue() {
+  const consoleMock = vi
+    .spyOn(console, "error")
+    .mockImplementation(() => undefined);
+
+  afterAll(() => {
+    consoleMock.mockReset();
+  });
   it("Error removing watcher from Jira issue", async () => {
     const axiosInstance = new AxiosMock();
 
     const jira = new Jira();
 
-    try {
-      await jira.removeCurrentUserAsWatcher("ISSUE-123");
-    } catch (error) {
-      expect(error.message).toContain("Test error");
-    }
+    await jira.removeCurrentUserAsWatcher("ISSUE-123");
+
+    expect(consoleMock).toHaveBeenLastCalledWith(
+      "Error creating issue or removing watcher:",
+      new Error("Test Error")
+    );
   });
 }
 
@@ -146,17 +154,17 @@ function testErrorCreatingJiraIssue() {
 function testCannotFindDoneTransitionForIssue() {
   it("Cannot find 'Done' transition for issue", async () => {
     const jira = new Jira();
-
+    const transitions = [{ id: "1", name: "In Progress" }];
     jira.jira.listTransitions = async () => {
-      return { transitions: [{ id: "1", name: "In Progress" }] };
+      return { transitions };
     };
-
+    jira.jira.transitionIssue = async () => {
+      transitions.pop();
+    };
     try {
       await jira.closeIssue("TEST-1");
     } catch (error) {
-      expect(error.message).toContain(
-        'Cannot find "Done" transition for issue TEST-1'
-      );
+      expect(error.message).toContain("Workflow Completed");
     }
   });
 }
