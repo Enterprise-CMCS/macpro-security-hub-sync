@@ -74,7 +74,7 @@ beforeEach(() => {
 export class AxiosMock {
   async request(config: AxiosRequestConfig) {
     if (config.url?.includes("/issue/ISSUE-123/watchers")) {
-      throw new Error("Test error");
+      throw new Error("Test Error");
     }
 
     return { status: 200, data: {} };
@@ -101,9 +101,27 @@ vi.mock("jira-client", () => {
         jiraSearchCalls.push({ searchString });
         return Promise.resolve(mockResponses.searchJiraResponse);
       }
+      listPriorities() {
+        return [
+          { id: "1", name: "High" },
+          { id: "2", name: "Medium" },
+        ];
+      }
+      findIssue() {
+        return mockResponses.addNewIssueJiraResponse;
+      }
+      addComment() {
+        return;
+      }
       async addNewIssue(issue: IssueObject) {
         jiraAddNewIssueCalls.push(issue);
         return Promise.resolve(mockResponses.addNewIssueJiraResponse);
+      }
+      async listTransitions(issueKey: string) {
+        return [{ id: "2", name: "Done" }];
+      }
+      async transitionIssue(issue: IssueObject) {
+        return;
       }
       getCurrentUser() {
         return "Current User";

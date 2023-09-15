@@ -48,7 +48,7 @@ export class SecurityHubJiraSync {
     // Step 2. Get all current findings from Security Hub
     const shFindingsObj = await this.securityHub.getAllActiveFindings();
     const shFindings = Object.values(shFindingsObj);
-
+    console.log(shFindings);
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     updatesForReturn.push(
       ...(await this.closeIssuesForResolvedFindings(jiraIssues, shFindings))
@@ -85,7 +85,6 @@ export class SecurityHubJiraSync {
     }
     return accountID;
   }
-
   async closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[]
@@ -97,15 +96,54 @@ export class SecurityHubJiraSync {
       )
     );
     try {
+      const makeComment = () =>
+        `As of ${new Date(
+          Date.now()
+        ).toDateString()}, this Security Hub finding has been marked resolved`;
       // close all security-hub labeled Jira issues that do not have an active finding
-      for (var i = 0; i < jiraIssues.length; i++) {
-        if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
-          await this.jira.closeIssue(jiraIssues[i].key);
-          updatesForReturn.push({
-            action: "closed",
-            webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
-            summary: jiraIssues[i].fields.summary,
-          });
+      if (process.env.AUTO_CLOSE !== "false") {
+        for (var i = 0; i < jiraIssues.length; i++) {
+          if (!expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary)) {
+            await this.jira.closeIssue(jiraIssues[i].key);
+            updatesForReturn.push({
+              action: "closed",
+              webUrl: `https://${process.env.JIRA_HOST}/browse/${jiraIssues[i].key}`,
+              summary: jiraIssues[i].fields.summary,
+            });
+            const comment = await this.jira.addCommentToIssueById(
+              jiraIssues[i].id,
+              makeComment()
+            );
+          }
+        }
+      } else {
+        console.log("Skipping auto closing...");
+        for (var i = 0; i < jiraIssues.length; i++) {
+          if (
+            !expectedJiraIssueTitles.includes(jiraIssues[i].fields.summary) &&
+            !jiraIssues[i].fields.summary.includes("Resolved") // skip already resolved issues
+          ) {
+            try {
+              const res = await this.jira.updateIssueTitleById(
+                jiraIssues[i].id,
+                {
+                  fields: {
+                    summary: `Resolved ${jiraIssues[i].fields.summary}`,
+                  },
+                }
+              );
+              const comment = await this.jira.addCommentToIssueById(
+                jiraIssues[i].id,
+                makeComment()
+              );
+            } catch (e) {
+              console.log(
+                `Title of ISSUE with id ${
+                  jiraIssues[i].id
+                } is not changed with error: ${JSON.stringify(e)}`
+              );
+            }
+          }
         }
       }
     } catch (e: any) {
@@ -190,8 +228,36 @@ export class SecurityHubJiraSync {
     ] = standardsControlArn.split(/[/:]+/);
     return `https://${region}.console.${partition}.amazon.com/securityhub/home?region=${region}#/standards/${securityStandards}-${securityStandardsVersion}/${controlId}`;
   }
-
-  getPriorityNumber = (severity: string): string => {
+  getSeverityMapping = (severity: string) => {
+    switch (severity) {
+      case "INFORMATIONAL":
+        return "5";
+      case "LOW":
+        return "4";
+      case "MEDIUM":
+        return "3";
+      case "HIGH":
+        return "2";
+      case "CRITICAL":
+        return "1";
+      default:
+        throw new Error(`Invalid severity: ${severity}`);
+    }
+  };
+  getPriorityId = (severity: string, priorities: any[]) => {
+    const severityLevel = parseInt(this.getSeverityMapping(severity));
+    if (severityLevel >= priorities.length) {
+      return priorities[priorities.length - 1];
+    }
+    return priorities[severityLevel - 1];
+  };
+  getPriorityNumber = (
+    severity: string,
+    isEnterprise: boolean = false
+  ): string => {
+    if (isEnterprise) {
+      return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
+    }
     switch (severity) {
       case "INFORMATIONAL":
         return "5";
@@ -212,6 +278,8 @@ export class SecurityHubJiraSync {
     finding: SecurityHubFinding,
     identifyingLabels: string[]
   ) {
+    const priorities = await this.jira.getPriorityIdsInDescendingOrder();
+    console.log(priorities);
     const newIssueData: IssueObject = {
       fields: {
         summary: `SecurityHub Finding - ${finding.title}`,
@@ -224,11 +292,18 @@ export class SecurityHubJiraSync {
           ...identifyingLabels,
         ],
         priority: {
-          id: finding.severity ? this.getPriorityNumber(finding.severity) : 3, // if severity is not specified, set 3 which is the middle of the default options.
+          id: finding.severity
+            ? this.getPriorityId(finding.severity, priorities)
+            : "3", // if severity is not specified, set 3 which is the middle of the default options.
         },
         ...this.customJiraFields,
       },
     };
+    if (finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
+      newIssueData.fields.priority = {
+        name: this.getPriorityNumber(finding.severity, true),
+      };
+    }
     if (this.epicKey) {
       newIssueData.fields.parent = { key: this.epicKey };
     }

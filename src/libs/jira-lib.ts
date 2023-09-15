@@ -1,6 +1,10 @@
-import JiraClient, { IssueObject } from "jira-client";
+import JiraClient, {
+  IssueObject,
+  JiraApiOptions,
+  TransitionObject,
+} from "jira-client";
 import * as dotenv from "dotenv";
-import axios from "axios";
+import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
 
 dotenv.config();
 
@@ -10,37 +14,72 @@ export class Jira {
 
   constructor() {
     Jira.checkEnvVars();
-
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",").map((status) =>
           status.trim()
         )
       : ["Done"];
-
-    this.jira = new JiraClient({
+    const jiraParams: JiraApiOptions = {
       protocol: "https",
       host: process.env.JIRA_HOST!,
       port: "443",
       username: process.env.JIRA_USERNAME,
-      password: process.env.JIRA_TOKEN,
       apiVersion: "2",
       strictSSL: true,
-    });
+    };
+    if (process.env.JIRA_HOST?.includes("jiraent")) {
+      jiraParams.bearer = process.env.JIRA_TOKEN;
+    } else {
+      jiraParams.password = process.env.JIRA_TOKEN;
+    }
+    this.jira = new JiraClient(jiraParams);
   }
-
+  async doesUserExist(accountId: string): Promise<boolean> {
+    try {
+      const user = await this.jira.getUser(accountId, "groups");
+      // User exists
+      return true;
+    } catch (err: any) {
+      if (err.statusCode === 404) {
+        // User does not exist
+        return false;
+      } else {
+        try {
+          const user = await this.jira.searchUsers({
+            username: accountId,
+            query: "",
+          });
+          return true;
+        } catch (e: any) {
+          // Handle other errors if needed
+          console.error(err);
+          return false;
+        }
+        // Handle other errors if needed
+        console.error(err);
+        return false;
+      }
+    }
+  }
   async removeCurrentUserAsWatcher(issueKey: string) {
     try {
       const currentUser = await this.jira.getCurrentUser();
 
       // Remove the current user as a watcher
+      const axiosHeader = {
+        Authorization: "",
+      };
+      if (process.env.JIRA_HOST?.includes("jiraent")) {
+        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
+      } else {
+        axiosHeader["Authorization"] = `Basic ${Buffer.from(
+          `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
+        ).toString("base64")}`;
+      }
       await axios({
         method: "DELETE",
         url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
-        headers: {
-          Authorization: `Basic ${Buffer.from(
-            `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
-          ).toString("base64")}`,
-        },
+        headers: axiosHeader,
         params: {
           accountId: currentUser.accountId,
         },
@@ -101,6 +140,7 @@ export class Jira {
     let allIssues: IssueObject[] = [];
     let results: JiraClient.JsonResponse;
     const searchOptions: JiraClient.SearchQuery = {};
+    console.log(fullQuery, searchOptions);
     try {
       do {
         results = await this.jira.searchJira(fullQuery, searchOptions);
@@ -115,9 +155,34 @@ export class Jira {
     }
     return allIssues;
   }
+  async getPriorityIdsInDescendingOrder(): Promise<string[]> {
+    try {
+      const priorities = await this.jira.listPriorities();
 
+      // Get priority IDs in descending order
+      const descendingPriorityIds = priorities.map(
+        (priority: { id: any }) => priority.id
+      );
+
+      return descendingPriorityIds;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
+      const assignee = process.env.ASSIGNEE ?? "";
+      if (assignee) {
+        const isAssignee = await this.doesUserExist(assignee);
+        if (isAssignee) {
+          if (process.env.JIRA_HOST?.includes("jiraent")) {
+            issue.fields.assignee = { name: assignee };
+          } else {
+            issue.fields.assignee = { accountId: assignee };
+          }
+        }
+      }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const newIssue = await this.jira.addNewIssue(issue);
@@ -130,6 +195,87 @@ export class Jira {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
   }
+  async updateIssueTitleById(
+    issueId: string,
+    updatedIssue: Partial<IssueObject>
+  ) {
+    try {
+      const response = await this.jira.updateIssue(issueId, updatedIssue);
+      console.log("Issue title updated successfully:", response);
+    } catch (error) {
+      console.error("Error updating issue title:", error);
+    }
+  }
+  async addCommentToIssueById(issueId: string, comment: string) {
+    try {
+      const response = await this.jira.addComment(issueId, comment);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  }
+  async findPathToClosure(transitions: any, currentStatus: string) {
+    const visited = new Set();
+    const queue: { path: string[]; status: string }[] = [
+      { path: [], status: currentStatus },
+    ];
+
+    while (queue.length > 0) {
+      const { path, status } = queue.shift()!;
+      visited.add(status);
+
+      const possibleTransitions = transitions.filter(
+        (transition: { from: { name: string } }) =>
+          transition.from.name === status
+      );
+
+      for (const transition of possibleTransitions) {
+        const newPath = [...path, transition.id];
+        const newStatus = transition.to.name;
+
+        if (
+          newStatus.toLowerCase().includes("close") ||
+          newStatus.toLowerCase().includes("done")
+        ) {
+          return newPath; // Found a path to closure
+        }
+
+        if (!visited.has(newStatus)) {
+          queue.push({ path: newPath, status: newStatus });
+        }
+      }
+    }
+
+    return []; // No valid path to closure found
+  }
+
+  async completeWorkflow(issueKey: string) {
+    const opposedStatuses = ["canceled", "backout", "rejected"];
+    try {
+      const issue = await this.jira.findIssue(issueKey);
+      do {
+        const availableTransitions = await this.jira.listTransitions(issueKey);
+        const processedTransitions: string[] = [];
+        console.log(availableTransitions);
+        if (availableTransitions.transitions.length > 0) {
+          const targetTransitions = availableTransitions.transitions.filter(
+            (transition: { name: string }) =>
+              !opposedStatuses.includes(transition.name.toLowerCase()) &&
+              !processedTransitions.includes(transition.name.toLowerCase())
+          );
+          const transitionId = targetTransitions[0].id;
+          processedTransitions.push(targetTransitions[0].name);
+          await this.jira.transitionIssue(issueKey, {
+            transition: { id: transitionId },
+          });
+          console.log(`Transitioned issue ${issueKey} to the next step.`);
+        } else {
+          break;
+        }
+      } while (true);
+    } catch (e) {
+      console.log("Error completing the workflow ", e);
+    }
+  }
 
   async closeIssue(issueKey: string) {
     if (!issueKey) return;
@@ -140,7 +286,8 @@ export class Jira {
       );
 
       if (!doneTransition) {
-        throw new Error(`Cannot find "Done" transition for issue ${issueKey}`);
+        this.completeWorkflow(issueKey);
+        return;
       }
 
       await this.jira.transitionIssue(issueKey, {
