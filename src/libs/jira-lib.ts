@@ -64,6 +64,7 @@ export class Jira {
   async removeCurrentUserAsWatcher(issueKey: string) {
     try {
       const currentUser = await this.jira.getCurrentUser();
+      console.log("removing current user: ", currentUser);
 
       // Remove the current user as a watcher
       const axiosHeader = {
