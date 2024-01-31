@@ -80,9 +80,6 @@ export class Jira {
         method: "DELETE",
         url: `https://${process.env.JIRA_HOST}/rest/api/2/issue/${issueKey}/watchers?username=${currentUser.name}`,
         headers: axiosHeader,
-        // params: {
-        //   accountId: currentUser.accountId,
-        // },
       });
     } catch (err) {
       console.error("Error creating issue or removing watcher:", err);
