@@ -305,7 +305,12 @@ export class SecurityHubJiraSync {
       };
     }
     if (this.epicKey) {
-      newIssueData.fields.parent = { key: this.epicKey };
+      if (process.env.JIRA_HOST?.includes("jiraent")) {
+        newIssueData.fields.epic = { key: this.epicKey };
+      }
+      else {
+        newIssueData.fields.parent = { key: this.epicKey };
+      }
     }
     let newIssueInfo;
     try {
