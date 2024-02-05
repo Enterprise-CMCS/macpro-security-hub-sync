@@ -117,6 +117,7 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 - Note: when testing is complete run `yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"`
 
 #### Instructions to test locally in an npm project
+
 In your terminal, in the root directory of your local clone of this repo, with your development branch checked out run `npm link`.
 
 Then, in your project that will be consuming this package, remove your `node_modules` folder, run `npm link "@enterprise-cmcs/macpro-security-hub-sync --save"`, and then rebuild your project:

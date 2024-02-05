@@ -4,10 +4,10 @@ import JiraClient, {
   TransitionObject,
 } from "jira-client";
 import * as dotenv from "dotenv";
-import axios, { 
-  AxiosHeaderValue, 
-  AxiosHeaders, 
-  AxiosRequestConfig, 
+import axios, {
+  AxiosHeaderValue,
+  AxiosHeaders,
+  AxiosRequestConfig,
 } from "axios";
 
 dotenv.config();
