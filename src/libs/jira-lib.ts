@@ -20,17 +20,19 @@ export class Jira {
         )
       : ["Done"];
     const jiraParams: JiraApiOptions = {
-      protocol: "https",
+      protocol: process.env.JIRA_PROTOCOL || "https",
       host: process.env.JIRA_HOST!,
-      port: "443",
+      port: process.env.JIRA_PORT || "443",
+      base: process.env.JIRA_BASE,
       username: process.env.JIRA_USERNAME,
       apiVersion: "2",
-      strictSSL: true,
+      // Set strictSSL to false only if protocol is explicitly "http"
+      strictSSL: process.env.JIRA_PROTOCOL !== "http",
     };
-    if (process.env.JIRA_HOST?.includes("jiraent")) {
-      jiraParams.bearer = process.env.JIRA_TOKEN;
-    } else {
+    if (process.env.JIRA_HOST?.includes("atlassian.net")) {
       jiraParams.password = process.env.JIRA_TOKEN;
+    } else {
+      jiraParams.bearer = process.env.JIRA_TOKEN;
     }
     this.jira = new JiraClient(jiraParams);
   }
@@ -61,6 +63,15 @@ export class Jira {
       }
     }
   }
+
+  private constructBaseUrl() {
+    let baseUrl = `${process.env.JIRA_PROTOCOL}://${process.env.JIRA_HOST}`;
+    if (process.env.JIRA_PORT) {
+      baseUrl += `:${process.env.JIRA_PORT}`;
+    }
+    return baseUrl;
+  }
+
   async removeCurrentUserAsWatcher(issueKey: string) {
     try {
       const currentUser = await this.jira.getCurrentUser();
@@ -69,20 +80,29 @@ export class Jira {
       const axiosHeader = {
         Authorization: "",
       };
-      if (process.env.JIRA_HOST?.includes("jiraent")) {
-        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
-      } else {
+
+      let url;
+      let reqParams;
+
+      // check version of jira
+      if (process.env.JIRA_HOST?.includes("atlassian.net")) {
+        // if jira cloud, use v3 and basic auth
         axiosHeader["Authorization"] = `Basic ${Buffer.from(
           `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
         ).toString("base64")}`;
+        url = `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`;
+        reqParams = { accountId: currentUser.accountId };
+      } else {
+        // otherwise use v2 of api and bearer token
+        axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
+        url = `${this.constructBaseUrl()}${process.env.JIRA_BASE}/rest/api/2/issue/${issueKey}/watchers?username=${currentUser.name}`;
       }
+
       await axios({
         method: "DELETE",
-        url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
         headers: axiosHeader,
-        params: {
-          accountId: currentUser.accountId,
-        },
+        url: url,
+        params: reqParams,
       });
     } catch (err) {
       console.error("Error creating issue or removing watcher:", err);
@@ -176,10 +196,10 @@ export class Jira {
       if (assignee) {
         const isAssignee = await this.doesUserExist(assignee);
         if (isAssignee) {
-          if (process.env.JIRA_HOST?.includes("jiraent")) {
-            issue.fields.assignee = { name: assignee };
-          } else {
+          if (process.env.JIRA_HOST?.includes("atlassian.net")) {
             issue.fields.assignee = { accountId: assignee };
+          } else {
+            issue.fields.assignee = { name: assignee };
           }
         }
       }
@@ -188,7 +208,7 @@ export class Jira {
       const newIssue = await this.jira.addNewIssue(issue);
       newIssue[
         "webUrl"
-      ] = `https://${process.env.JIRA_HOST}/browse/${newIssue.key}`;
+      ] = `${this.constructBaseUrl()}${process.env.JIRA_BASE}/browse/${newIssue.key}`;
       await this.removeCurrentUserAsWatcher(newIssue.key);
       return newIssue;
     } catch (e: any) {
