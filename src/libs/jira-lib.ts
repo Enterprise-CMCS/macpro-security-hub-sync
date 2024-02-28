@@ -260,7 +260,7 @@ export class Jira {
               !opposedStatuses.includes(transition.name.toLowerCase()) &&
               !processedTransitions.includes(transition.name.toLowerCase())
           );
-          if(targetTransitions.length <=0){
+          if (targetTransitions.length <= 0) {
             break;
           }
           const transitionId = targetTransitions[0].id;
@@ -268,7 +268,9 @@ export class Jira {
           await this.jira.transitionIssue(issueKey, {
             transition: { id: transitionId },
           });
-          console.log(`Transitioned issue ${issueKey} to the next step: ${targetTransitions[0].name}`);
+          console.log(
+            `Transitioned issue ${issueKey} to the next step: ${targetTransitions[0].name}`
+          );
         } else {
           break;
         }
