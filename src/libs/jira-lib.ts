@@ -261,6 +261,18 @@ export class Jira {
               !processedTransitions.includes(transition.name.toLowerCase())
           );
           if (targetTransitions.length <= 0) {
+            const lastStatus =
+              processedTransitions[
+                processedTransitions.length - 1
+              ].toLowerCase();
+            const doneStatuses = ["done", "closed", "close", "complete"];
+            if (!doneStatuses.includes(lastStatus)) {
+              throw new Error(
+                "Unsupported Workflow: does not contain any of " +
+                  doneStatuses.join(",") +
+                  "statuses"
+              );
+            }
             break;
           }
           const transitionId = targetTransitions[0].id;
