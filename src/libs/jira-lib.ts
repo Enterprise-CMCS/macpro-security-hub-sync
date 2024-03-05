@@ -247,27 +247,45 @@ export class Jira {
 
     return []; // No valid path to closure found
   }
-
   async completeWorkflow(issueKey: string) {
     const opposedStatuses = ["canceled", "backout", "rejected"];
     try {
       const issue = await this.jira.findIssue(issueKey);
+      const processedTransitions: string[] = [];
       do {
         const availableTransitions = await this.jira.listTransitions(issueKey);
-        const processedTransitions: string[] = [];
-        console.log(availableTransitions);
         if (availableTransitions.transitions.length > 0) {
           const targetTransitions = availableTransitions.transitions.filter(
             (transition: { name: string }) =>
               !opposedStatuses.includes(transition.name.toLowerCase()) &&
               !processedTransitions.includes(transition.name.toLowerCase())
           );
+          if (targetTransitions.length <= 0) {
+            if (!processedTransitions.length) {
+              throw new Error("Unsupported workflow; no transition available");
+            }
+            const lastStatus =
+              processedTransitions[
+                processedTransitions.length - 1
+              ].toLowerCase();
+            const doneStatuses = ["done", "closed", "close", "complete"];
+            if (!doneStatuses.includes(lastStatus)) {
+              throw new Error(
+                "Unsupported Workflow: does not contain any of " +
+                  doneStatuses.join(",") +
+                  "statuses"
+              );
+            }
+            break;
+          }
           const transitionId = targetTransitions[0].id;
           processedTransitions.push(targetTransitions[0].name);
           await this.jira.transitionIssue(issueKey, {
             transition: { id: transitionId },
           });
-          console.log(`Transitioned issue ${issueKey} to the next step.`);
+          console.log(
+            `Transitioned issue ${issueKey} to the next step: ${targetTransitions[0].name}`
+          );
         } else {
           break;
         }
