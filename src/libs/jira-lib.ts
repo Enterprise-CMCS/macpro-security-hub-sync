@@ -4,7 +4,11 @@ import JiraClient, {
   TransitionObject,
 } from "jira-client";
 import * as dotenv from "dotenv";
-import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
+import axios, {
+  AxiosHeaderValue,
+  AxiosHeaders,
+  AxiosRequestConfig,
+} from "axios";
 
 dotenv.config();
 
@@ -69,20 +73,29 @@ export class Jira {
       const axiosHeader = {
         Authorization: "",
       };
+
+      let url;
+      let reqParams;
+
+      // check version of jira
       if (process.env.JIRA_HOST?.includes("jiraent")) {
+        // if jira enterprise, use v2 of api and bearer token
         axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
+        url = `https://${process.env.JIRA_HOST}/rest/api/2/issue/${issueKey}/watchers?username=${currentUser.name}`;
       } else {
+        // otherwise use v3 and basic auth
         axiosHeader["Authorization"] = `Basic ${Buffer.from(
           `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
         ).toString("base64")}`;
+        url = `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`;
+        reqParams = { accountId: currentUser.accountId };
       }
+
       await axios({
         method: "DELETE",
-        url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
         headers: axiosHeader,
-        params: {
-          accountId: currentUser.accountId,
-        },
+        url: url,
+        params: reqParams,
       });
     } catch (err) {
       console.error("Error creating issue or removing watcher:", err);
