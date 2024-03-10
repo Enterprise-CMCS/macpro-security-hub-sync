@@ -284,7 +284,7 @@ export class Jira {
             transition: { id: transitionId },
           });
           console.log(
-            `Transitioned issue ${issueKey} to the next step: ${targetTransitions[0].name}`
+            `Transitioned issue ${issueKey} to the next stage: ${targetTransitions[0].name}`
           );
         } else {
           break;
