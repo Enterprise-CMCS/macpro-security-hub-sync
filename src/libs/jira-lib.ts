@@ -279,7 +279,7 @@ export class Jira {
             break;
           }
           const transitionId = targetTransitions[0].id;
-          processedTransitions.push(targetTransitions[0].name);
+          processedTransitions.push(targetTransitions[0].name.toLowerCase());
           await this.jira.transitionIssue(issueKey, {
             transition: { id: transitionId },
           });
