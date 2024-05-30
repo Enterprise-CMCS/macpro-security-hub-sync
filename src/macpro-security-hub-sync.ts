@@ -317,7 +317,7 @@ export class SecurityHubJiraSync {
         }
         await this.jira.linkIssues(
           newIssueInfo.key,
-          process.env.JIRA_FEATURE_Key,
+          process.env.JIRA_FEATURE_Key ?? "",
           linkType
         );
       }
