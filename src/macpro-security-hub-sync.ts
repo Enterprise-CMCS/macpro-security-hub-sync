@@ -310,6 +310,17 @@ export class SecurityHubJiraSync {
     let newIssueInfo;
     try {
       newIssueInfo = await this.jira.createNewIssue(newIssueData);
+      if (process.env.JIRA_FEATURE_KEY) {
+        let linkType = "Relates";
+        if (process.env.JIRA_LINK_TYPE) {
+          linkType = process.env.JIRA_LINK_TYPE;
+        }
+        await this.jira.linkIssues(
+          newIssueInfo.key,
+          process.env.JIRA_FEATURE_Key,
+          linkType
+        );
+      }
     } catch (e: any) {
       throw new Error(`Error creating Jira issue from finding: ${e.message}`);
     }
