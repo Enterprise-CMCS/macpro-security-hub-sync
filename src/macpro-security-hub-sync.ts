@@ -316,11 +316,7 @@ export class SecurityHubJiraSync {
         if (process.env.JIRA_LINK_TYPE) {
           linkType = process.env.JIRA_LINK_TYPE;
         }
-        await this.jira.linkIssues(
-          newIssueInfo.key,
-          feature_key,
-          linkType
-        );
+        await this.jira.linkIssues(newIssueInfo.key, feature_key, linkType);
       }
     } catch (e: any) {
       throw new Error(`Error creating Jira issue from finding: ${e.message}`);
