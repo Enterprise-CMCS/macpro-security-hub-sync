@@ -269,7 +269,7 @@ The above configuration will establish links between newly created tickets and '
 #### Jira Ticket Assignee
 This feature assigns the newly created ticket to the Jira user specified in the variable. To configure this feature, use the following variable:
 ```
-ASSIGNEE='user1253'
+ASSIGNEE='EUAid'
 ```
 By setting this variable, the package will ensure that the new ticket is assigned to the specified user, streamlining the task assignment process and ensuring that the appropriate team member is notified immediately. This enhances accountability and ensures that issues are addressed promptly by the correct individual.
 
