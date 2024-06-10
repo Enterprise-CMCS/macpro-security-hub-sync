@@ -170,9 +170,27 @@ export class Jira {
       return [];
     }
   }
+  addBusinessDaysToday(numBusinessDays: number) {
+    const result = new Date();
+    let businessDaysToAdd = numBusinessDays;
+
+    // Adjust for weekends
+    while (businessDaysToAdd > 0) {
+      // Move to the next day
+      result.setDate(result.getDate() + 1);
+
+      // Check if the current day is a weekend (Saturday or Sunday)
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        businessDaysToAdd--;
+      }
+    }
+
+    return result;
+  }
   async createNewIssue(issue: IssueObject): Promise<IssueObject> {
     try {
       const assignee = process.env.ASSIGNEE ?? "";
+      const due = process.env.DUE_DURATION ?? 0;
       if (assignee) {
         const isAssignee = await this.doesUserExist(assignee);
         if (isAssignee) {
@@ -184,6 +202,10 @@ export class Jira {
         }
       }
       issue.fields.project = { key: process.env.JIRA_PROJECT };
+
+      if (due) {
+        issue.fields.duedate = this.addBusinessDaysToday(due);
+      }
 
       const newIssue = await this.jira.addNewIssue(issue);
       newIssue[
