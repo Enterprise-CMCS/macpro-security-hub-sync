@@ -233,37 +233,45 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 
 - Note: when testing is complete run `yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"`
 
+
 ## Supplementary Functions
-Highlighted below are additional functionalities provided by this package.
+Below are additional functionalities provided by this package.
 
 #### Automated Closure for Advanced Workflows 
-Starting from version 1.7.0, this package introduces support for automated closure, tailored for enterprise workflows within Jira. It caters to intricate workflows featuring multiple pathways towards resolution. To activate this capability, it's necessary to specify the following parameters:
-
+Starting from version 1.7.0, this package includes support for automated closure, specifically designed to enhance enterprise workflows within Jira. This feature supports complex workflows that have multiple paths to resolution. To enable automated closure, you need to specify the following parameter:
 ```
 AUTO_CLOSE = true
 ```
-
+When this parameter is set to true, the system will automatically close tickets based on predefined criteria, streamlining the workflow process and ensuring that issues are resolved efficiently.
 
 #### Skipping Automated Closure
-Should the AUTO_CLOSE variable be set to false, the package will append a comment to the relevant ticket, signifying the resolution of the associated issue on the corresponding date. For instance, if the variable is configured as follows:
+If the AUTO_CLOSE variable is set to false, the package will not automatically close the ticket. Instead, it will append a comment to the relevant ticket to indicate that the issue has been resolved, including the resolution date. For example, if the variable is configured as follows:
+
 ```
 AUTO_CLOSE = false
 ```
-a comment akin to the following will be appended to the ticket, with "Resolved" prefixed to the ticket title:
+a comment similar to the following will be added to the ticket, with "Resolved" prefixed to the ticket title:
 ```
 `As of ${new Date(Date.now()).toDateString()}, this Security
  Hub finding has been marked resolved`
 ```
-
+This feature allows for greater control over the closure process, ensuring that stakeholders are informed about the resolution without automatically closing the ticket.
 
 #### Issue Linking Feature
-Introduced in version 1.7.2, this feature facilitates linking newly generated issues to a specified Jira issue ID using a desired link type, which can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. To employ this functionality, the following environmental variables can be utilized:
-
+Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. To utilize this functionality, you need to set the following environment variables:
 ```
 JIRA_FEATURE_KEY='Pj-12'
 JIRA_LINK_TYPE='Relates'
 ```
-The configuration above will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship.
+
+The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
+
+#### Jira Ticket Assignee
+This feature assigns the newly created ticket to the Jira user specified in the variable. To configure this feature, use the following variable:
+```
+ASSIGNEE='user1253'
+```
+By setting this variable, the package will ensure that the new ticket is assigned to the specified user, streamlining the task assignment process and ensuring that the appropriate team member is notified immediately. This enhances accountability and ensures that issues are addressed promptly by the correct individual.
 
 ## Contributing
 
