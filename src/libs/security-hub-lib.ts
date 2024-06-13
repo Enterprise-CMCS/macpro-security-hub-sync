@@ -7,6 +7,12 @@ import {
   AwsSecurityFinding,
 } from "@aws-sdk/client-securityhub";
 
+export interface Resource {
+  Id: string;
+  Partition: string;
+  Region: string;
+  Type: string;
+}
 export interface SecurityHubFinding {
   title?: string;
   region?: string;
@@ -16,6 +22,7 @@ export interface SecurityHubFinding {
   description?: string;
   standardsControlArn?: string;
   remediation?: Remediation;
+  Resources?: Resource[];
 }
 
 export class SecurityHub {
@@ -126,6 +133,7 @@ export class SecurityHub {
           ? finding.ProductFields.StandardsControlArn
           : "",
       remediation: finding.Remediation,
+      Resources: finding.Resources,
     };
   }
 }
