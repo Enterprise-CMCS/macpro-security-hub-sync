@@ -1,4 +1,4 @@
-import { Jira, SecurityHub, SecurityHubFinding } from "./libs";
+import { Jira, Resource, SecurityHub, SecurityHubFinding } from "./libs";
 import { IssueObject } from "jira-client";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 
@@ -153,6 +153,23 @@ export class SecurityHubJiraSync {
     }
     return updatesForReturn;
   }
+  makeResourceList(resources: Resource[] | undefined) {
+    if (!resources) {
+      return `No Resources`;
+    }
+    const maxLength = Math.max(...resources.map(({ Id }) => Id?.length || 0));
+    const title = "Resource Id".padEnd(maxLength + maxLength / 2 + 4);
+
+    let Table = `${title}| Partition   | Region     | Type    \n`;
+    resources.forEach(({ Id, Partition, Region, Type }) => {
+      Table += `${Id.padEnd(maxLength + 2)}| ${Partition.padEnd(
+        11
+      )} | ${Region.padEnd(9)} | ${Type} \n`;
+    });
+
+    Table += `------------------------------------------------------------------------------------------------`;
+    return Table;
+  }
 
   createIssueBody(finding: SecurityHubFinding) {
     const {
@@ -203,6 +220,12 @@ export class SecurityHubJiraSync {
 
       h2. SecurityHubFindingUrl:
       ${this.createSecurityHubFindingUrl(standardsControlArn)}
+
+      h2. Resources:
+      Following are the resources those were non-compliant at the time of the issue creation
+      ${this.makeResourceList(finding.Resources)}
+
+      To check the latest list of resources, kindly refer to the finding url
 
       h2. AC:
 

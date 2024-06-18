@@ -1,4 +1,3 @@
-
 <h1  align="center"  style="border-bottom: none;">macpro-security-hub-sync</h1>
 
 <h3  align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
@@ -55,15 +54,9 @@
 
 </p>
 
-  
-
 ## Usage
 
-  
-
 Set a few enviroment variables that are expected by the package:
-
-  
 
 ```
 
@@ -77,11 +70,7 @@ export JIRA_TOKEN="a very long string" // This should be a [Personal Access Toke
 
 ```
 
-  
-
 Install the package with a dependency manager of your choice, probably as a dev dependency:
-
-  
 
 ```
 
@@ -89,11 +78,7 @@ npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
 
 ```
 
-  
-
 Import the package and execute a sync:
-
-  
 
 ```
 
@@ -103,11 +88,7 @@ await new SecurityHubJiraSync().sync();
 
 ```
 
-  
-
 Or, override defaults by passing more options:
-
-  
 
 ```
 
@@ -129,19 +110,11 @@ customfield_14151: [{value: "Not Applicable "}],
 
 ```
 
-  
-
 ## Info
-
-  
 
 #### Overview
 
-  
-
 This package syncs AWS Security Hub Findings to Jira.
-
-  
 
 - When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 Jira Issue created.
 
@@ -149,15 +122,9 @@ This package syncs AWS Security Hub Findings to Jira.
 
 - When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
 
-  
-
 #### Sync Process
 
-  
-
 The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
-
-  
 
 1. Get all open Security Hub issues (identified by a label convention) from Jira
 
@@ -167,19 +134,13 @@ The SecurityHubJiraSyncOptions class's main function is sync. The sync process f
 
 4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
 
-  
-
 #### Instructions to test locally with a yarn project
-
-  
 
 - in your terminal from your local clone of macpro-security-hub-sync with your development branch
 
--  `yarn link` (note, when testing is complete, run `yarn unlink`)
+- `yarn link` (note, when testing is complete, run `yarn unlink`)
 
 that will return output like:
-
-  
 
 ```
 
@@ -195,25 +156,17 @@ info You can now run `yarn link "@enterprise-cmcs/macpro-security-hub-sync"` in 
 
 ```
 
-  
-
 - npm install
 
 - npm run build (this builds the package)
 
-  
-
 In your local yarn project that will be using the macpro-security-hub-sync package, run:
 
-  
+- `rm -rf node_modules`
 
--  `rm -rf node_modules`
-
--  `yarn link "@enterprise-cmcs/macpro-security-hub-sync"`
+- `yarn link "@enterprise-cmcs/macpro-security-hub-sync"`
 
 that will return output like:
-
-  
 
 ```
 
@@ -227,38 +180,45 @@ success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
 
 ```
 
-  
-
--  `yarn install`
+- `yarn install`
 
 - Note: when testing is complete run `yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"`
 
-
 ## Supplementary Functions
+
 Below are additional functionalities provided by this package.
 
-#### Automated Closure for Advanced Workflows 
+#### Automated Closure for Advanced Workflows
+
 Starting from version 1.7.0, this package includes support for automated closure, specifically designed to enhance enterprise workflows within Jira. This feature supports complex workflows that have multiple paths to resolution. To enable automated closure, you need to specify the following parameter:
+
 ```
 AUTO_CLOSE = true
 ```
+
 When this parameter is set to true, the system will automatically close tickets based on predefined criteria, streamlining the workflow process and ensuring that issues are resolved efficiently.
 
 #### Skipping Automated Closure
+
 If the AUTO_CLOSE variable is set to false, the package will not automatically close the ticket. Instead, it will append a comment to the relevant ticket to indicate that the issue has been resolved, including the resolution date. For example, if the variable is configured as follows:
 
 ```
 AUTO_CLOSE = false
 ```
+
 a comment similar to the following will be added to the ticket, with "Resolved" prefixed to the ticket title:
+
 ```
 `As of ${new Date(Date.now()).toDateString()}, this Security
  Hub finding has been marked resolved`
 ```
+
 This feature allows for greater control over the closure process, ensuring that stakeholders are informed about the resolution without automatically closing the ticket.
 
 #### Issue Linking Feature
+
 Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. To utilize this functionality, you need to set the following environment variables:
+
 ```
 JIRA_FEATURE_KEY='Pj-12'
 JIRA_LINK_TYPE='Relates'
@@ -267,30 +227,23 @@ JIRA_LINK_TYPE='Relates'
 The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
 
 #### Jira Ticket Assignee
+
 This feature assigns the newly created ticket to the Jira user specified in the variable. To configure this feature, use the following variable:
+
 ```
 ASSIGNEE='user1253'
 ```
+
 By setting this variable, the package will ensure that the new ticket is assigned to the specified user, streamlining the task assignment process and ensuring that the appropriate team member is notified immediately. This enhances accountability and ensures that issues are addressed promptly by the correct individual.
 
 ## Contributing
 
-  
-
 Work items for this project are tracked in Jira. Check out the [project kanban board](https://qmacbis.atlassian.net/jira/software/c/projects/OY2/boards/251) to view all work items affecting this repo.
-
-  
 
 If you don't have access to Jira, would like access to Jira, or would like to drop us an idea without pursuing Jira access, please visit the [slack channel](https://cmsgov.slack.com/archives/C04MBTV136X).
 
-  
-
 ## License
 
-  
-
 [![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
-
-  
 
 See [LICENSE](LICENSE) for full details.
