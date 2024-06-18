@@ -157,11 +157,17 @@ export class SecurityHubJiraSync {
     if (!resources) {
       return `No Resources`;
     }
-    let Table = `        Resource Id                               | Partition    | Region    | Type    \n`;
+    const maxLength = Math.max(...resources.map(({ Id }) => Id?.length || 0));
+    const title = "Resource Id".padEnd(maxLength + maxLength / 2 + 4);
+
+    let Table = `${title}| Partition   | Region     | Type    \n`;
     resources.forEach(({ Id, Partition, Region, Type }) => {
-      Table += `${Id} | ${Partition}          | ${Region} | ${Type} \n`;
+      Table += `${Id.padEnd(maxLength + 2)}| ${Partition.padEnd(
+        11
+      )} | ${Region.padEnd(9)} | ${Type} \n`;
     });
-    Table += `---------------------------------------------------------------------------------------------`;
+
+    Table += `------------------------------------------------------------------------------------------------`;
     return Table;
   }
 
