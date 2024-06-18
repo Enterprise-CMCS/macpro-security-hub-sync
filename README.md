@@ -220,7 +220,7 @@ This feature allows for greater control over the closure process, ensuring that 
 Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. To utilize this functionality, you need to set the following environment variables:
 
 ```
-JIRA_FEATURE_KEY='Pj-12'
+JIRA_LINK_ID='Pj-12'
 JIRA_LINK_TYPE='Relates'
 ```
 
