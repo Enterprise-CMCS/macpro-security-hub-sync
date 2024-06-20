@@ -133,7 +133,7 @@ export class SecurityHub {
           ? finding.ProductFields.StandardsControlArn
           : "",
       remediation: finding.Remediation,
-      Resources: finding.Resources,
+      Resources: finding.Resources as unknown as Resource[],
     };
   }
 }
