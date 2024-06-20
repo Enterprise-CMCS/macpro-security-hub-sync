@@ -333,7 +333,7 @@ export class SecurityHubJiraSync {
     let newIssueInfo;
     try {
       newIssueInfo = await this.jira.createNewIssue(newIssueData);
-      const feature_key = process.env.JIRA_FEATURE_KEY ?? "";
+      const feature_key = process.env.JIRA_LINK_ID ?? "";
       if (feature_key) {
         let linkType = "Relates";
         if (process.env.JIRA_LINK_TYPE) {
