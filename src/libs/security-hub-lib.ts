@@ -76,7 +76,7 @@ export class SecurityHub {
           },
         ],
       };
-      if (process.env.INCLUDES_ALL_PRODUCTS !== "true") {
+      if (process.env.INCLUDE_ALL_PRODUCTS !== "true") {
         filters.ProductName = [{ Comparison: "EQUALS", Value: "Security Hub" }];
       }
       if (process.env.SKIP_PRODUCTS) {
