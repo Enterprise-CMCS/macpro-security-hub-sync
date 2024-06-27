@@ -5,6 +5,7 @@ import {
   GetFindingsCommandOutput,
   Remediation,
   AwsSecurityFinding,
+  AwsSecurityFindingFilters,
 } from "@aws-sdk/client-securityhub";
 
 export interface Resource {
@@ -61,13 +62,12 @@ export class SecurityHub {
           : 24 * 60 * 60 * 1000; // 1 day
       const maxDatetime = new Date(currentTime.getTime() - delayForNewIssues);
 
-      const filters = {
+      const filters: AwsSecurityFindingFilters = {
         RecordState: [{ Comparison: "EQUALS", Value: "ACTIVE" }],
         WorkflowStatus: [
           { Comparison: "EQUALS", Value: "NEW" },
           { Comparison: "EQUALS", Value: "NOTIFIED" },
         ],
-        ProductName: [{ Comparison: "EQUALS", Value: "Security Hub" }],
         SeverityLabel: this.severityLabels,
         CreatedAt: [
           {
@@ -76,7 +76,21 @@ export class SecurityHub {
           },
         ],
       };
-
+      if (process.env.INCLUDES_ALL_PRODUCTS !== "true") {
+        filters.ProductName = [{ Comparison: "EQUALS", Value: "Security Hub" }];
+      }
+      if (process.env.SKIP_PRODUCTS) {
+        const skipList: string[] = process.env.SKIP_PRODUCTS.split(",");
+        skipList.forEach((product) => {
+          if (!filters.ProductName) {
+            filters.ProductName = [];
+          }
+          filters.ProductName?.push({
+            Comparison: "NOT_EQUALS",
+            Value: product,
+          });
+        });
+      }
       // use an object to store unique findings by title
       const uniqueFindings: { [title: string]: SecurityHubFinding } = {};
 
