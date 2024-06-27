@@ -162,9 +162,9 @@ export class SecurityHubJiraSync {
 
     let Table = `${title}| Partition   | Region     | Type    \n`;
     resources.forEach(({ Id, Partition, Region, Type }) => {
-      Table += `${Id.padEnd(maxLength + 2)}| ${Partition.padEnd(
+      Table += `${Id.padEnd(maxLength + 2)}| ${(Partition ?? "").padEnd(
         11
-      )} | ${Region.padEnd(9)} | ${Type} \n`;
+      )} | ${(Region ?? "").padEnd(9)} | ${Type ?? ""} \n`;
     });
 
     Table += `------------------------------------------------------------------------------------------------`;
