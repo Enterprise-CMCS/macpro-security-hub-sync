@@ -305,7 +305,7 @@ export class SecurityHubJiraSync {
     console.log(priorities);
     const newIssueData: IssueObject = {
       fields: {
-        summary: `SecurityHub Finding - ${finding.title}`,
+        summary: `SecurityHub Finding - ${finding.title}`.substring(0, 255),
         description: this.createIssueBody(finding),
         issuetype: { name: "Task" },
         labels: [
