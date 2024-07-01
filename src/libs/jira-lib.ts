@@ -195,22 +195,16 @@ export class Jira {
       throw new Error(`Error creating Jira issue: ${e.message}`);
     }
   }
-  async linkIssues(
-    newIssueKey: string,
-    featureIssueKey: string,
-    linkType = "Relates"
-  ) {
+  async linkIssues(newIssueKey: string, issueID: string, linkType = "Relates") {
     const linkData = {
       type: { name: linkType },
       inwardIssue: { key: newIssueKey },
-      outwardIssue: { key: featureIssueKey },
+      outwardIssue: { key: issueID },
     };
 
     try {
       await this.jira.issueLink(linkData);
-      console.log(
-        `Successfully linked issue ${newIssueKey} with ${featureIssueKey}`
-      );
+      console.log(`Successfully linked issue ${newIssueKey} with ${issueID}`);
     } catch (error) {
       console.error("Error linking issues:", error);
     }
