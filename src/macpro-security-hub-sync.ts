@@ -339,7 +339,13 @@ export class SecurityHubJiraSync {
         if (process.env.JIRA_LINK_TYPE) {
           linkType = process.env.JIRA_LINK_TYPE;
         }
-        await this.jira.linkIssues(newIssueInfo.key, issue_id, linkType);
+        const linkDirection = process.env.JIRA_LINK_DIRECTION ?? "inward";
+        await this.jira.linkIssues(
+          newIssueInfo.key,
+          issue_id,
+          linkType,
+          linkDirection
+        );
       }
     } catch (e: any) {
       throw new Error(`Error creating Jira issue from finding: ${e.message}`);
