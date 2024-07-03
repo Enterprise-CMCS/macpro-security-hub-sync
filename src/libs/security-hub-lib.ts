@@ -23,6 +23,7 @@ export interface SecurityHubFinding {
   description?: string;
   standardsControlArn?: string;
   remediation?: Remediation;
+  ProductName?: string;
   Resources?: Resource[];
 }
 
@@ -147,6 +148,7 @@ export class SecurityHub {
           ? finding.ProductFields.StandardsControlArn
           : "",
       remediation: finding.Remediation,
+      ProductName: finding.ProductName,
       Resources: finding.Resources as unknown as Resource[],
     };
   }
