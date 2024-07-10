@@ -312,7 +312,7 @@ export class SecurityHubJiraSync {
           "security-hub",
           finding.severity,
           finding.accountAlias,
-          finding.ProductName?.trim().replace(/ /g, '-'),
+          finding.ProductName?.trim().replace(/ /g, "-"),
           ...identifyingLabels,
         ],
         priority: {
