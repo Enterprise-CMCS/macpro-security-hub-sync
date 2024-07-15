@@ -15,6 +15,12 @@ interface UpdateForReturn {
   summary: string;
 }
 
+interface LabelConfig {
+  labelField: string;
+  labelPrefix?: string;
+  labelDelimiter?: string;
+}
+
 export class SecurityHubJiraSync {
   private readonly jira: Jira;
   private readonly securityHub: SecurityHub;
@@ -296,7 +302,41 @@ export class SecurityHubJiraSync {
         throw new Error(`Invalid severity: ${severity}`);
     }
   };
+  createLabels(
+    finding: SecurityHubFinding,
+    identifyingLabels: string[],
+    config: LabelConfig[]
+  ): string[] {
+    const labels: string[] = [];
+    const fields = ["accountId", "region", "identify"];
+    const values = [...identifyingLabels, "security-hub"];
 
+    config.forEach(
+      ({ labelField: field, labelDelimiter: delim, labelPrefix: prefix }) => {
+        const delimiter = delim ?? "";
+        const labelPrefix = prefix ?? "";
+
+        if (fields.includes(field)) {
+          const index = fields.indexOf(field);
+          if (index >= 0) {
+            labels.push(
+              `${labelPrefix}${delimiter}${values[index]
+                ?.trim()
+                .replace(/ /g, "")}`
+            );
+          }
+        } else {
+          const value = (finding[field] ?? "")
+            .toString()
+            .trim()
+            .replace(/ /g, "");
+          labels.push(`${labelPrefix}${delimiter}${value}`);
+        }
+      }
+    );
+
+    return labels;
+  }
   async createJiraIssueFromFinding(
     finding: SecurityHubFinding,
     identifyingLabels: string[]
@@ -323,6 +363,18 @@ export class SecurityHubJiraSync {
         ...this.customJiraFields,
       },
     };
+    if (process.env.LABELS_CONFIG) {
+      try {
+        const config = JSON.parse(process.env.LABELS_CONFIG);
+        newIssueData.fields.labels = this.createLabels(
+          finding,
+          identifyingLabels,
+          config
+        );
+      } catch (e) {
+        console.log("Invalid labels config - going with default labels");
+      }
+    }
     if (finding.severity && process.env.JIRA_HOST?.includes("jiraent")) {
       newIssueData.fields.priority = {
         name: this.getPriorityNumber(finding.severity, true),

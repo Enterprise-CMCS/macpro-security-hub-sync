@@ -25,6 +25,7 @@ export interface SecurityHubFinding {
   remediation?: Remediation;
   ProductName?: string;
   Resources?: Resource[];
+  [key: string]: string | unknown;
 }
 
 export class SecurityHub {
