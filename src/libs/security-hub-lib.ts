@@ -15,6 +15,7 @@ export interface Resource {
   Type: string;
 }
 export interface SecurityHubFinding {
+  id?: string;
   title?: string;
   region?: string;
   accountAlias?: string;
@@ -135,6 +136,7 @@ export class SecurityHub {
   ): SecurityHubFinding {
     if (!finding) return {};
     return {
+      id: finding.Id,
       title: finding.Title,
       region: finding.Region,
       accountAlias: this.accountAlias,

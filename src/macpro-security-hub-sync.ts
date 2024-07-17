@@ -176,7 +176,17 @@ export class SecurityHubJiraSync {
     Table += `------------------------------------------------------------------------------------------------`;
     return Table;
   }
+  createSecurityHubFindingUrlThroughFilters(findingId: string) {
+    const arnParts = findingId.split(':');
+    const region = arnParts[3];
+    const accountId = arnParts[4];
 
+    const baseUrl = `https://${region}.console.aws.amazon.com/securityhub/home?region=${region}`;
+    const searchParam = `Id%3D%255Coperator%255C%253AEQUALS%255C%253A${findingId}`
+    const url = `${baseUrl}#/findings?search=${searchParam}`;
+
+    return url;
+  }
   createIssueBody(finding: SecurityHubFinding) {
     const {
       remediation: {
@@ -185,6 +195,7 @@ export class SecurityHubJiraSync {
           Text: remediationText = "",
         } = {},
       } = {},
+      id = "",
       title = "",
       description = "",
       accountAlias = "",
@@ -225,7 +236,7 @@ export class SecurityHubJiraSync {
       ${severity}
 
       h2. SecurityHubFindingUrl:
-      ${this.createSecurityHubFindingUrl(standardsControlArn)}
+      ${standardsControlArn ? this.createSecurityHubFindingUrl(standardsControlArn): this.createSecurityHubFindingUrlThroughFilters(id)}
 
       h2. Resources:
       Following are the resources those were non-compliant at the time of the issue creation
