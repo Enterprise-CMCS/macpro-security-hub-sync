@@ -182,13 +182,21 @@ export class SecurityHubJiraSync {
     if (findingId.startsWith("arn:")) {
       // Extract region and account ID from the ARN
       const arnParts = findingId.split(":");
-      region = arnParts[3];
-      accountId = arnParts[4];
+      if (arnParts.length >= 5) {
+        region = arnParts[3];
+        accountId = arnParts[4];
+      } else {
+        return "Invalid URL";
+      }
     } else {
       // Extract region and account ID from the non-ARN format
       const parts = findingId.split("/");
-      region = parts[1];
-      accountId = parts[2];
+      if (parts.length >= 3) {
+        region = parts[1];
+        accountId = parts[2];
+      } else {
+        return "Invalid URL";
+      }
     }
 
     const baseUrl = `https://${region}.console.aws.amazon.com/securityhub/home?region=${region}`;
