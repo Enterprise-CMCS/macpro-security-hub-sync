@@ -176,7 +176,35 @@ export class SecurityHubJiraSync {
     Table += `------------------------------------------------------------------------------------------------`;
     return Table;
   }
+  createSecurityHubFindingUrlThroughFilters(findingId: string) {
+    let region, accountId;
 
+    if (findingId.startsWith("arn:")) {
+      // Extract region and account ID from the ARN
+      const arnParts = findingId.split(":");
+      if (arnParts.length >= 5) {
+        region = arnParts[3];
+        accountId = arnParts[4];
+      } else {
+        return "Invalid URL";
+      }
+    } else {
+      // Extract region and account ID from the non-ARN format
+      const parts = findingId.split("/");
+      if (parts.length >= 3) {
+        region = parts[1];
+        accountId = parts[2];
+      } else {
+        return "Invalid URL";
+      }
+    }
+
+    const baseUrl = `https://${region}.console.aws.amazon.com/securityhub/home?region=${region}`;
+    const searchParam = `Id%3D%255Coperator%255C%253AEQUALS%255C%253A${findingId}`;
+    const url = `${baseUrl}#/findings?search=${searchParam}`;
+
+    return url;
+  }
   createIssueBody(finding: SecurityHubFinding) {
     const {
       remediation: {
@@ -185,6 +213,7 @@ export class SecurityHubJiraSync {
           Text: remediationText = "",
         } = {},
       } = {},
+      id = "",
       title = "",
       description = "",
       accountAlias = "",
@@ -225,7 +254,11 @@ export class SecurityHubJiraSync {
       ${severity}
 
       h2. SecurityHubFindingUrl:
-      ${this.createSecurityHubFindingUrl(standardsControlArn)}
+      ${
+        standardsControlArn
+          ? this.createSecurityHubFindingUrl(standardsControlArn)
+          : this.createSecurityHubFindingUrlThroughFilters(id)
+      }
 
       h2. Resources:
       Following are the resources those were non-compliant at the time of the issue creation
