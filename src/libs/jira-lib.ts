@@ -5,6 +5,7 @@ import JiraClient, {
 } from "jira-client";
 import * as dotenv from "dotenv";
 import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
+import { LabelConfig } from "macpro-security-hub-sync";
 
 dotenv.config();
 
@@ -110,18 +111,56 @@ export class Jira {
   private static formatLabelQuery(label: string): string {
     return `labels = '${label}'`;
   }
+  createSearchLabels(
+    identifyingLabels: string[],
+    config: LabelConfig[]
+  ): string[] {
+    const labels: string[] = [];
+    const fields = ["accountId", "region", "identify"];
+    const values = [...identifyingLabels, "security-hub"];
 
+    config.forEach(
+      ({ labelField: field, labelDelimiter: delim, labelPrefix: prefix }) => {
+        const delimiter = delim ?? "";
+        const labelPrefix = prefix ?? "";
+
+        if (fields.includes(field)) {
+          const index = fields.indexOf(field);
+          if (index >= 0) {
+            labels.push(
+              `${labelPrefix}${delimiter}${values[index]
+                ?.trim()
+                .replace(/ /g, "")}`
+            );
+          }
+        }
+      }
+    );
+
+    return labels;
+  }
   async getAllSecurityHubIssuesInJiraProject(
     identifyingLabels: string[]
   ): Promise<IssueObject[]> {
-    const labelQueries = [...identifyingLabels, "security-hub"].map((label) =>
-      Jira.formatLabelQuery(label)
-    );
+    const labelQueries = [...identifyingLabels, "security-hub"]
+      .map((label) => Jira.formatLabelQuery(label))
+      .join(" AND ");
+    let finalLabelQuery = labelQueries;
+    if (process.env.LABELS_CONFIG) {
+      const config = JSON.parse(process.env.LABELS_CONFIG);
+      const configLabels = this.createSearchLabels(identifyingLabels, config);
+      const searchQuery = configLabels
+        .map((label) => Jira.formatLabelQuery(label))
+        .join(" AND ");
+      if (searchQuery) {
+        finalLabelQuery = `(${finalLabelQuery}) OR (${searchQuery})`;
+      }
+    }
     const projectQuery = `project = '${process.env.JIRA_PROJECT}'`;
     const statusQuery = `status not in ('${this.jiraClosedStatuses.join(
       "','" // wrap each closed status in single quotes
     )}')`;
-    const fullQuery = [...labelQueries, projectQuery, statusQuery].join(
+    const fullQuery = [finalLabelQuery, projectQuery, statusQuery].join(
       " AND "
     );
     // We  want to do everything possible to prevent matching tickets that we shouldn't
