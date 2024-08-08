@@ -70,25 +70,29 @@ export class Jira {
       const axiosHeader = {
         Authorization: "",
       };
-      let params = {
-        username: undefined,
-        accountId: undefined,
-      };
       if (process.env.JIRA_HOST?.includes("jiraent")) {
         axiosHeader["Authorization"] = `Bearer ${process.env.JIRA_TOKEN}`;
-        params["username"] = currentUser.name;
+        await axios({
+          method: "DELETE",
+          url: `https://${process.env.JIRA_HOST}/rest/api/2/issue/${issueKey}/watchers`,
+          headers: axiosHeader,
+          params: {
+            username: currentUser.name,
+          },
+        });
       } else {
         axiosHeader["Authorization"] = `Basic ${Buffer.from(
           `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
         ).toString("base64")}`;
-        params["accountId"] = currentUser.accountId;
+        await axios({
+          method: "DELETE",
+          url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
+          headers: axiosHeader,
+          params: {
+            accountId: currentUser.accountId,
+          },
+        });
       }
-      await axios({
-        method: "DELETE",
-        url: `https://${process.env.JIRA_HOST}/rest/api/3/issue/${issueKey}/watchers`,
-        headers: axiosHeader,
-        params,
-      });
     } catch (err) {
       console.error("Error creating issue or removing watcher:", err);
     }
