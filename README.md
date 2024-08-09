@@ -1,5 +1,5 @@
 ```
-NOTE: New Version is available - Please Upgrade to V2 for Enterprise Jira, V1 can be used for the teams using atlassian Jira
+NOTE: New Version is available - All Enterprise Jira teams should update to [v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2), v1 can be used for the teams using atlassian Jira
 ```
 <h1  align="center"  style="border-bottom: none;">macpro-security-hub-sync</h1>
 
