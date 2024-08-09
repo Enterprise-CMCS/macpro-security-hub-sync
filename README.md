@@ -1,3 +1,6 @@
+```
+NOTE: New Version is available - Please Upgrade to V2 for Enterprise Jira, V1 can be used for the teams using atlassian Jira
+```
 <h1  align="center"  style="border-bottom: none;">macpro-security-hub-sync</h1>
 
 <h3  align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
