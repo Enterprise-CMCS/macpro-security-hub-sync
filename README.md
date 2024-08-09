@@ -227,6 +227,14 @@ JIRA_LINK_DIRECTION = 'inward'
 
 The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship with 'inward' direction specified. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
 
+##### Note
+
+```
+Keep in mind that you may need to increase the Jira Linking
+limit if the number of linked issues exceeds the current
+capacity.
+```
+
 #### Non-Compliant Resources Information
 
 This feature is available for versions >= 1.9.0 implicitly and ensures that the resources information is provided in the description of the issues created by Security Hub Jira integration. An Example is given below
