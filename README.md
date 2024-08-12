@@ -1,3 +1,4 @@
+NOTE: New Version is available - All Enterprise Jira teams should update to [v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2), v1 can be used for the teams using atlassian Jira
 <h1  align="center"  style="border-bottom: none;">macpro-security-hub-sync</h1>
 
 <h3  align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
@@ -217,14 +218,77 @@ This feature allows for greater control over the closure process, ensuring that 
 
 #### Issue Linking Feature
 
-Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. To utilize this functionality, you need to set the following environment variables:
+Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. Also, The link direction can be configured either as inward or outward (after version 1.11.0 ). To utilize this functionality, you need to set the following environment variables:
 
 ```
-JIRA_LINK_ID='Pj-12'
+JIRA_FEATURE_KEY='Pj-12'
 JIRA_LINK_TYPE='Relates'
+JIRA_LINK_DIRECTION = 'inward'
 ```
 
-The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
+The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship with 'inward' direction specified. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
+
+##### Note
+
+```
+Keep in mind that you may need to increase the Jira Linking
+limit if the number of linked issues exceeds the current
+capacity.
+```
+
+#### Non-Compliant Resources Information
+
+This feature is available for versions >= 1.9.0 implicitly and ensures that the resources information is provided in the description of the issues created by Security Hub Jira integration. An Example is given below
+
+```
+Resource Id | Partition | Region | Type
+resource-xxvysdh | aws | us-east-1 | AwsDynamoDbTable
+------------------------------------------------------
+```
+
+### Custom Labels Configuration
+
+This feature allows customization of labels for the Security Hub integration by specifying labels through the configuration. You can define how labels are formatted and displayed by using the `jira-labels-config` variable.
+
+**Configuration Details:**
+
+- **`jira-labels-config`**: A stringified JSON list of objects, where each object can include the following fields:
+  - **`labelField`**: The field from the findings data that will be used for the label.
+  - **`labelPrefix`**: An optional prefix to prepend to the label.
+  - **`labelDelimiter`**: An optional delimiter to separate the field values in the label
+
+##### Example Configuration
+
+```
+jira-labels-config: "[{\"labelField\":\"ProductName\",\"labelPrefix\":\"product\",\"labelDelimiter\":\":\"},{\"labelField\":\"severity\"},{\"labelField\":\"accountId\",\"labelDelimiter\":\"-\",\"labelPrefix\":\"account\"},{\"labelField\":\"region\"},{\"labelField\":\"accountAlias\"}]"
+```
+
+In this example:
+
+- Labels for the `ProductName` field are prefixed with "product" and delimited with a colon (`:`).
+- Labels for the `severity` field are used as-is.
+- Labels for the `accountId` field are prefixed with "account" and delimited with a hyphen (`-`).
+- Labels for the `region` and `accountAlias` fields are used without additional formatting.
+
+This configuration provides flexibility in how labels are generated and displayed, allowing you to tailor them to your specific needs.
+
+#### Other Products Findings
+
+This feature allows the integration of findings from products other than AWS Security Hub, such as Trivy, Guard Duty, NASH, and others. To configure this functionality, you can specify the following action variables:
+
+- **`include-all-products`**: A boolean value (`true` or `false`) that determines whether findings from products other than Security Hub should be included. Set this to `true` to enable the inclusion of all specified products.
+- **`skip-products`**: A comma-separated list of product names that should be excluded from the findings. This allows you to filter out specific products while including others.
+
+Additionally, the URL for retrieving findings from other products is dynamically constructed using the ID field of the findings. This ensures accurate and targeted access to the relevant findings.
+
+##### Example Configuration
+
+```
+include-all-products: true
+skip-products: Trivy, Guard Duty
+```
+
+In this example, findings from all products except Trivy and Guard Duty will be included
 
 #### Jira Ticket Assignee
 
