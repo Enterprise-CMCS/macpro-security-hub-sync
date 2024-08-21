@@ -242,10 +242,14 @@ export class SecurityHubJiraSync {
 
       ${description}
 
-      h2. Remediation:
+      ${
+        remediationText || remediationUrl
+          ? `h2. Remediation:
 
       ${remediationUrl}
-      ${remediationText}
+      ${remediationText}`
+          : ""
+      }
 
       h2. AWS Account:
       ${awsAccountId} (${accountAlias})
