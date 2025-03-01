@@ -94,6 +94,15 @@ export class SecurityHub {
           });
         });
       }
+      if (process.env.GENERATOR_ID) {
+        filters.GeneratorId = [
+          {
+            Value: process.env.GENERATOR_ID, // Use the environment variable
+            Comparison: "EQUALS"
+          }
+        ];
+      }
+
       // use an object to store unique findings by title
       const uniqueFindings: { [title: string]: SecurityHubFinding } = {};
 
