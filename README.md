@@ -1,314 +1,194 @@
-NOTE: New Version is available - All Enterprise Jira teams should update to [v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2), v1 can be used for the teams using atlassian Jira
+# ⚠️ DEPRECATED - macpro-security-hub-sync v1
 
-<h1  align="center"  style="border-bottom: none;">macpro-security-hub-sync</h1>
+> **🚨 IMPORTANT NOTICE: This package (v1) is deprecated and no longer maintained.**
+>
+> **All users should migrate to the new version:** [mac-fc-security-hub-visibility v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2)
+>
+> **This v1 package should only be used by teams still using Atlassian Jira who cannot immediately migrate.**
 
-<h3  align="center">NPM module to create Jira issues for all findings in Security Hub for the current AWS account.</h3>
+---
 
-<p  align="center">
+## About This Package
 
-<a  href="https://cmsgov.slack.com/archives/C04MBTV136X">
+This NPM module creates Jira issues for AWS Security Hub findings in your current AWS account. However, **this version is deprecated** and users should migrate to the newer, actively maintained version.
 
-<img  alt="Slack"  src="https://img.shields.io/badge/Slack-channel-purple.svg">
+[![Slack](https://img.shields.io/badge/Slack-channel-purple.svg)](https://cmsgov.slack.com/archives/C04MBTV136X)
+[![Latest Release](https://img.shields.io/github/release/Enterprise-CMCS/macpro-security-hub-sync.svg)](https://github.com/Enterprise-CMCS/macpro-security-hub-sync/releases/latest)
+[![NPM Version](https://img.shields.io/npm/v/@enterprise-cmcs/macpro-security-hub-sync/latest.svg)](https://www.npmjs.com/package/@enterprise-cmcs/macpro-security-hub-sync)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/maintainability)](https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/test_coverage)](https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/test_coverage)
+[![Semantic Release](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+[![Dependabot](https://badgen.net/badge/Dependabot/enabled/green?icon=dependabot)](https://dependabot.com/)
+[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-</a>
+## Migration Notice
 
-<a  href="https://github.com/Enterprise-CMCS/macpro-security-hub-sync/releases/latest">
+**Before using this package, please consider migrating to the newer version:**
 
-<img  alt="latest release"  src="https://img.shields.io/github/release/Enterprise-CMCS/macpro-security-hub-sync.svg">
+- **New Version**: [mac-fc-security-hub-visibility v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2)
+- **Recommended for**: All Enterprise Jira teams
+- **This v1 version**: Only for teams using Atlassian Jira who cannot immediately migrate
 
-</a>
+## Usage (Deprecated)
 
-<a  href="https://www.npmjs.com/package/@enterprise-cmcs/macpro-security-hub-sync">
+> **⚠️ Warning**: This usage information is for the deprecated v1 package. Please migrate to v2 instead.
 
-<img  alt="npm latest version"  src="https://img.shields.io/npm/v/@enterprise-cmcs/macpro-security-hub-sync/latest.svg">
+### Environment Variables
 
-</a>
+Set the following environment variables:
 
-<a  href="https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/maintainability">
-
-<img  src="https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/maintainability"  />
-
-</a>
-
-<a  href="https://codeclimate.com/github/Enterprise-CMCS/macpro-security-hub-sync/test_coverage">
-
-<img  src="https://api.codeclimate.com/v1/badges/c8dfe630c7857d3ce591/test_coverage"  />
-
-</a>
-
-<a  href="https://github.com/semantic-release/semantic-release">
-
-<img  alt="semantic-release: angular"  src="https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release">
-
-</a>
-
-<a  href="https://dependabot.com/">
-
-<img  alt="Dependabot"  src="https://badgen.net/badge/Dependabot/enabled/green?icon=dependabot">
-
-</a>
-
-<a  href="https://github.com/prettier/prettier">
-
-<img  alt="code style: prettier"  src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square">
-
-</a>
-
-</p>
-
-## Usage
-
-Set a few enviroment variables that are expected by the package:
-
-```
-
+```bash
 export JIRA_HOST=yourorg.atlassian.net
-
-export JIRA_PROJECT=OY2 // This is the ID for the Jira Project you want to interact with
-
+export JIRA_PROJECT=OY2  # Jira Project ID
 export JIRA_USERNAME="myuser@example.com"
-
-export JIRA_TOKEN="a very long string" // This should be a [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) that you generate
-
+export JIRA_TOKEN="your-personal-access-token"  # Generate from Atlassian
 ```
 
-Install the package with a dependency manager of your choice, probably as a dev dependency:
+The `JIRA_TOKEN` should be a [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html).
 
-```
+### Installation
 
+```bash
 npm install @enterprise-cmcs/macpro-security-hub-sync --save-dev
-
 ```
 
-Import the package and execute a sync:
+### Basic Usage
 
-```
-
+```javascript
 import { SecurityHubJiraSync } from "@enterprise-cmcs/macpro-security-hub-sync";
 
 await new SecurityHubJiraSync().sync();
-
 ```
 
-Or, override defaults by passing more options:
+### Advanced Configuration
 
-```
-
+```javascript
 await new SecurityHubJiraSync({
-
-region: "us-west-2", // Which regional Security Hub to scrape; default is "us-east-1"
-
-severities: ["HIGH","CRITICAL"], // List of all severities to find; default is ["MEDIUM","HIGH","CRITICAL"]
-
-customJiraFields: { // A map of custom fields to add to each Jira Issue; no default.
-
-customfield_14117: [{value: "Platform Team"}],
-
-customfield_14151: [{value: "Not Applicable "}],
-
-}
-
+  region: "us-west-2", // Default: "us-east-1"
+  severities: ["HIGH", "CRITICAL"], // Default: ["MEDIUM", "HIGH", "CRITICAL"]
+  customJiraFields: {
+    customfield_14117: [{ value: "Platform Team" }],
+    customfield_14151: [{ value: "Not Applicable" }],
+  },
 }).sync();
-
 ```
 
-## Info
+## How It Works
 
-#### Overview
+### Overview
 
-This package syncs AWS Security Hub Findings to Jira.
+This package synchronizes AWS Security Hub findings to Jira:
 
-- When the sync utility is run, each Security Hub Finding type (Title) is represented as a single issue. So if you have violated the 'S3.8' rule three individual times, you will have one S3.8 Jira Issue created.
+- **One Issue Per Finding Type**: Each Security Hub finding type (title) creates a single Jira issue, regardless of how many resources are affected
+- **Severity Filtering**: By default, only CRITICAL and HIGH severity findings create Jira issues (configurable)
+- **Automatic Closure**: When findings are resolved in Security Hub, corresponding Jira issues are automatically closed on the next sync
 
-- By default, CRITICAL and HIGH severity findings get issues created in Jira. However, this is configurable in either direction (more or less sensitivity).
+### Sync Process
 
-- When the utility runs, previously created Jira issues that no longer have an active finding are closed. In this way, Jira issues can be automatically closed as the Findings are resolved, if you run the utility on a schedule (recommended).
+1. **Retrieve Open Issues**: Get all open Security Hub-related Jira issues (identified by label convention)
+2. **Get Current Findings**: Fetch all current findings from AWS Security Hub
+3. **Close Resolved Issues**: Close Jira issues for findings that are no longer active
+4. **Create New Issues**: Create Jira issues for new findings that don't have existing issues
 
-#### Sync Process
+## Local Development (Deprecated)
 
-The SecurityHubJiraSyncOptions class's main function is sync. The sync process follows this process:
+> **⚠️ Note**: These instructions are for the deprecated v1 package.
 
-1. Get all open Security Hub issues (identified by a label convention) from Jira
+### Testing with Yarn Link
 
-2. Get all current findings from Security Hub
+1. In your local clone of macpro-security-hub-sync:
 
-3. Close existing Jira issues if their finding is no longer active/current
+   ```bash
+   yarn link
+   npm install
+   npm run build
+   ```
 
-4. Create Jira issue (including labels from our label convention) for current findings that do not already have a Jira issue
+1. In your test project:
 
-#### Instructions to test locally with a yarn project
+   ```bash
+   rm -rf node_modules
+   yarn link "@enterprise-cmcs/macpro-security-hub-sync"
+   yarn install
+   ```
 
-- in your terminal from your local clone of macpro-security-hub-sync with your development branch
+1. When testing is complete
 
-- `yarn link` (note, when testing is complete, run `yarn unlink`)
+   ```bash
+   yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"
+   yarn unlink  # Run this in the macpro-security-hub-sync directory
+   ```
 
-that will return output like:
+## Advanced Features (Deprecated)
 
+### Automated Closure (v1.7.0+)
+
+Control automatic ticket closure:
+
+```bash
+AUTO_CLOSE=true   # Automatically close resolved tickets
+AUTO_CLOSE=false  # Add resolution comment instead of closing
 ```
 
-yarn link v1.22.19
+### Issue Linking (v1.7.2+)
 
-warning ../../../package.json: No license field
+Link new issues to existing Jira issues:
 
-success Registered "@enterprise-cmcs/macpro-security-hub-sync".
-
-info You can now run `yarn link "@enterprise-cmcs/macpro-security-hub-sync"` in the projects where you want to use this package and it will be used instead.
-
-✨ Done in 0.06s.
-
-```
-
-- npm install
-
-- npm run build (this builds the package)
-
-In your local yarn project that will be using the macpro-security-hub-sync package, run:
-
-- `rm -rf node_modules`
-
-- `yarn link "@enterprise-cmcs/macpro-security-hub-sync"`
-
-that will return output like:
-
-```
-
-yarn link v1.22.19
-
-warning ../../../package.json: No license field
-
-success Using linked package for "@enterprise-cmcs/macpro-security-hub-sync".
-
-✨ Done in 0.05s.
-
-```
-
-- `yarn install`
-
-- Note: when testing is complete run `yarn unlink "@enterprise-cmcs/macpro-security-hub-sync"`
-
-## Supplementary Functions
-
-Below are additional functionalities provided by this package.
-
-#### Automated Closure for Advanced Workflows
-
-Starting from version 1.7.0, this package includes support for automated closure, specifically designed to enhance enterprise workflows within Jira. This feature supports complex workflows that have multiple paths to resolution. To enable automated closure, you need to specify the following parameter:
-
-```
-AUTO_CLOSE = true
-```
-
-When this parameter is set to true, the system will automatically close tickets based on predefined criteria, streamlining the workflow process and ensuring that issues are resolved efficiently.
-
-#### Skipping Automated Closure
-
-If the AUTO_CLOSE variable is set to false, the package will not automatically close the ticket. Instead, it will append a comment to the relevant ticket to indicate that the issue has been resolved, including the resolution date. For example, if the variable is configured as follows:
-
-```
-AUTO_CLOSE = false
-```
-
-a comment similar to the following will be added to the ticket, with "Resolved" prefixed to the ticket title:
-
-```
-`As of ${new Date(Date.now()).toDateString()}, this Security
- Hub finding has been marked resolved`
-```
-
-This feature allows for greater control over the closure process, ensuring that stakeholders are informed about the resolution without automatically closing the ticket.
-
-#### Issue Linking Feature
-
-Introduced in version 1.7.2, this feature facilitates the linking of newly created issues to a specified Jira issue ID using a desired link type. The link type can be any of the available Jira Issue Link Types such as 'Relates', 'Blocks', 'Duplicates', etc. Also, The link direction can be configured either as inward or outward (after version 1.11.0 ). To utilize this functionality, you need to set the following environment variables:
-
-```
-JIRA_FEATURE_KEY='Pj-12'
+```bash
+JIRA_FEATURE_KEY='PJ-12'
 JIRA_LINK_TYPE='Relates'
-JIRA_LINK_DIRECTION = 'inward'
-```
-
-The above configuration will establish links between newly created tickets and 'Pj-12' under the "Relates" relationship with 'inward' direction specified. This feature is particularly useful for maintaining a clear and organized relationship between issues, aiding in better tracking and management.
-
-##### Note
-
-```
-Keep in mind that you may need to increase the Jira Linking
-limit if the number of linked issues exceeds the current
-capacity.
-```
-
-#### Non-Compliant Resources Information
-
-This feature is available for versions >= 1.9.0 implicitly and ensures that the resources information is provided in the description of the issues created by Security Hub Jira integration. An Example is given below
-
-```
-Resource Id | Partition | Region | Type
-resource-xxvysdh | aws | us-east-1 | AwsDynamoDbTable
-------------------------------------------------------
+JIRA_LINK_DIRECTION='inward'  # v1.11.0+
 ```
 
 ### Custom Labels Configuration
 
-This feature allows customization of labels for the Security Hub integration by specifying labels through the configuration. You can define how labels are formatted and displayed by using the `jira-labels-config` variable.
+Configure custom labels with JSON:
 
-**Configuration Details:**
-
-- **`jira-labels-config`**: A stringified JSON list of objects, where each object can include the following fields:
-  - **`labelField`**: The field from the findings data that will be used for the label.
-  - **`labelPrefix`**: An optional prefix to prepend to the label.
-  - **`labelDelimiter`**: An optional delimiter to separate the field values in the label
-
-##### Example Configuration
-
-```
-jira-labels-config: "[{\"labelField\":\"ProductName\",\"labelPrefix\":\"product\",\"labelDelimiter\":\":\"},{\"labelField\":\"severity\"},{\"labelField\":\"accountId\",\"labelDelimiter\":\"-\",\"labelPrefix\":\"account\"},{\"labelField\":\"region\"},{\"labelField\":\"accountAlias\"}]"
+```bash
+jira-labels-config='[{"labelField":"ProductName","labelPrefix":"product","labelDelimiter":":"}, {"labelField":"severity"}]'
 ```
 
-In this example:
+### Multi-Product Support
 
-- Labels for the `ProductName` field are prefixed with "product" and delimited with a colon (`:`).
-- Labels for the `severity` field are used as-is.
-- Labels for the `accountId` field are prefixed with "account" and delimited with a hyphen (`-`).
-- Labels for the `region` and `accountAlias` fields are used without additional formatting.
+Include findings from other security products:
 
-This configuration provides flexibility in how labels are generated and displayed, allowing you to tailor them to your specific needs.
-
-#### Other Products Findings
-
-This feature allows the integration of findings from products other than AWS Security Hub, such as Trivy, Guard Duty, NASH, and others. To configure this functionality, you can specify the following action variables:
-
-- **`include-all-products`**: A boolean value (`true` or `false`) that determines whether findings from products other than Security Hub should be included. Set this to `true` to enable the inclusion of all specified products.
-- **`skip-products`**: A comma-separated list of product names that should be excluded from the findings. This allows you to filter out specific products while including others.
-
-Additionally, the URL for retrieving findings from other products is dynamically constructed using the ID field of the findings. This ensures accurate and targeted access to the relevant findings.
-
-##### Example Configuration
-
-```
-include-all-products: true
-skip-products: Trivy, Guard Duty
+```bash
+include-all-products=true
+skip-products="Trivy, Guard Duty"
 ```
 
-In this example, findings from all products except Trivy and Guard Duty will be included
+### Ticket Assignment
 
-#### Jira Ticket Assignee
+Assign new tickets to specific users:
 
-This feature assigns the newly created ticket to the Jira user specified in the variable. To configure this feature, use the following variable:
-
-```
+```bash
 ASSIGNEE='user1253'
 ```
 
-By setting this variable, the package will ensure that the new ticket is assigned to the specified user, streamlining the task assignment process and ensuring that the appropriate team member is notified immediately. This enhances accountability and ensures that issues are addressed promptly by the correct individual.
+### Resource Information (v1.9.0+)
+
+Non-compliant resources are automatically included in issue descriptions:
+
+```markdown
+Resource Id | Partition | Region | Type
+resource-xxvysdh | aws | us-east-1 | AwsDynamoDbTable
+```
 
 ## Contributing
 
-Work items for this project are tracked in Jira. Check out the [project kanban board](https://qmacbis.atlassian.net/jira/software/c/projects/OY2/boards/251) to view all work items affecting this repo.
+> **⚠️ Note**: This project is deprecated. Consider contributing to the new version instead.
 
-If you don't have access to Jira, would like access to Jira, or would like to drop us an idea without pursuing Jira access, please visit the [slack channel](https://cmsgov.slack.com/archives/C04MBTV136X).
+- **Project Board**: [Jira Kanban Board](https://qmacbis.atlassian.net/jira/software/c/projects/OY2/boards/251)
+- **Slack Channel**: [#macpro-security-hub-sync](https://cmsgov.slack.com/archives/C04MBTV136X)
 
 ## License
 
 [![License](https://img.shields.io/badge/License-CC0--1.0--Universal-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/legalcode)
 
 See [LICENSE](LICENSE) for full details.
+
+---
+
+## 🚨 Final Reminder
+
+**This package is deprecated. Please migrate to [mac-fc-security-hub-visibility v2](https://github.com/Enterprise-CMCS/mac-fc-security-hub-visibility/tree/v2) for continued support and new features.**

@@ -5,16 +5,31 @@
 # Source repository: https://github.com/actions/dependency-review-action
 # Public documentation: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review#dependency-review-enforcement
 name: "Dependency Review"
-on: [pull_request]
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Monday at 4:30 AM (after CodeQL runs at 4:00 AM)
+    - cron: "30 4 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
-      - name: "Dependency Review"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Dependency Review
         uses: actions/dependency-review-action@v3
+        with:
+          # Fail on high or critical severity vulnerabilities
+          fail-on-severity: high
+          # Optionally configure license compliance
+          # deny-licenses: GPL-3.0, AGPL-3.0
+          # Optionally allow specific known vulnerabilities
+          # allow-ghsas: GHSA-abcd-1234-5679

@@ -1,10 +1,6 @@
-import JiraClient, {
-  IssueObject,
-  JiraApiOptions,
-  TransitionObject,
-} from "jira-client";
+import JiraClient, { IssueObject, JiraApiOptions } from "jira-client";
 import * as dotenv from "dotenv";
-import axios, { AxiosHeaderValue, AxiosHeaders } from "axios";
+import axios from "axios";
 import { LabelConfig } from "macpro-security-hub-sync";
 
 dotenv.config();

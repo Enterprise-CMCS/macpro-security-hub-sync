@@ -1,7 +1,7 @@
 {
-  "name": "example",
+  "name": "macpro-security-hub-sync-example",
   "type": "module",
   "devDependencies": {
-    "@enterprise-cmcs/macpro-security-hub-sync": "^1.0.0"
+    "@enterprise-cmcs/macpro-security-hub-sync": "^1.14.3"
   }
 }
