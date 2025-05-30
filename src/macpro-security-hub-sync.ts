@@ -47,9 +47,8 @@ export class SecurityHubJiraSync {
     const identifyingLabels: string[] = [accountId, this.region];
 
     // Step 1. Get all open Security Hub issues from Jira
-    const jiraIssues = await this.jira.getAllSecurityHubIssuesInJiraProject(
-      identifyingLabels
-    );
+    const jiraIssues =
+      await this.jira.getAllSecurityHubIssuesInJiraProject(identifyingLabels);
 
     // Step 2. Get all current findings from Security Hub
     const shFindingsObj = await this.securityHub.getAllActiveFindings();
@@ -57,7 +56,7 @@ export class SecurityHubJiraSync {
     console.log(shFindings);
     // Step 3. Close existing Jira issues if their finding is no longer active/current
     updatesForReturn.push(
-      ...(await this.closeIssuesForResolvedFindings(jiraIssues, shFindings))
+      ...(await this.closeIssuesForResolvedFindings(jiraIssues, shFindings)),
     );
 
     // Step 4. Create Jira issue for current findings that do not already have a Jira issue
@@ -65,8 +64,8 @@ export class SecurityHubJiraSync {
       ...(await this.createJiraIssuesForNewFindings(
         jiraIssues,
         shFindings,
-        identifyingLabels
-      ))
+        identifyingLabels,
+      )),
     );
 
     console.log(JSON.stringify(updatesForReturn));
@@ -86,25 +85,25 @@ export class SecurityHubJiraSync {
     let accountID: string = response.Account || "";
     if (!accountID.match("[0-9]{12}")) {
       throw new Error(
-        "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue."
+        "ERROR:  An issue was encountered when looking up your AWS Account ID.  Refusing to continue.",
       );
     }
     return accountID;
   }
   async closeIssuesForResolvedFindings(
     jiraIssues: IssueObject[],
-    shFindings: SecurityHubFinding[]
+    shFindings: SecurityHubFinding[],
   ) {
     const updatesForReturn: UpdateForReturn[] = [];
     const expectedJiraIssueTitles = Array.from(
       new Set(
-        shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`)
-      )
+        shFindings.map((finding) => `SecurityHub Finding - ${finding.title}`),
+      ),
     );
     try {
       const makeComment = () =>
         `As of ${new Date(
-          Date.now()
+          Date.now(),
         ).toDateString()}, this Security Hub finding has been marked resolved`;
       // close all security-hub labeled Jira issues that do not have an active finding
       if (process.env.AUTO_CLOSE !== "false") {
@@ -118,7 +117,7 @@ export class SecurityHubJiraSync {
             });
             const comment = await this.jira.addCommentToIssueById(
               jiraIssues[i].id,
-              makeComment()
+              makeComment(),
             );
           }
         }
@@ -136,17 +135,17 @@ export class SecurityHubJiraSync {
                   fields: {
                     summary: `Resolved ${jiraIssues[i].fields.summary}`,
                   },
-                }
+                },
               );
               const comment = await this.jira.addCommentToIssueById(
                 jiraIssues[i].id,
-                makeComment()
+                makeComment(),
               );
             } catch (e) {
               console.log(
                 `Title of ISSUE with id ${
                   jiraIssues[i].id
-                } is not changed with error: ${JSON.stringify(e)}`
+                } is not changed with error: ${JSON.stringify(e)}`,
               );
             }
           }
@@ -154,7 +153,7 @@ export class SecurityHubJiraSync {
       }
     } catch (e: any) {
       throw new Error(
-        `Error closing Jira issue for resolved finding: ${e.message}`
+        `Error closing Jira issue for resolved finding: ${e.message}`,
       );
     }
     return updatesForReturn;
@@ -169,7 +168,7 @@ export class SecurityHubJiraSync {
     let Table = `${title}| Partition   | Region     | Type    \n`;
     resources.forEach(({ Id, Partition, Region, Type }) => {
       Table += `${Id.padEnd(maxLength + 2)}| ${(Partition ?? "").padEnd(
-        11
+        11,
       )} | ${(Region ?? "").padEnd(9)} | ${Type ?? ""} \n`;
     });
 
@@ -319,7 +318,7 @@ export class SecurityHubJiraSync {
   };
   getPriorityNumber = (
     severity: string,
-    isEnterprise: boolean = false
+    isEnterprise: boolean = false,
   ): string => {
     if (isEnterprise) {
       return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
@@ -342,7 +341,7 @@ export class SecurityHubJiraSync {
   createLabels(
     finding: SecurityHubFinding,
     identifyingLabels: string[],
-    config: LabelConfig[]
+    config: LabelConfig[],
   ): string[] {
     const labels: string[] = [];
     const fields = ["accountId", "region", "identify"];
@@ -359,7 +358,7 @@ export class SecurityHubJiraSync {
             labels.push(
               `${labelPrefix}${delimiter}${values[index]
                 ?.trim()
-                .replace(/ /g, "")}`
+                .replace(/ /g, "")}`,
             );
           }
         } else {
@@ -369,14 +368,14 @@ export class SecurityHubJiraSync {
             .replace(/ /g, "");
           labels.push(`${labelPrefix}${delimiter}${value}`);
         }
-      }
+      },
     );
 
     return labels;
   }
   async createJiraIssueFromFinding(
     finding: SecurityHubFinding,
-    identifyingLabels: string[]
+    identifyingLabels: string[],
   ) {
     const priorities = await this.jira.getPriorityIdsInDescendingOrder();
     console.log(priorities);
@@ -406,7 +405,7 @@ export class SecurityHubJiraSync {
         newIssueData.fields.labels = this.createLabels(
           finding,
           identifyingLabels,
-          config
+          config,
         );
       } catch (e) {
         console.log("Invalid labels config - going with default labels");
@@ -434,7 +433,7 @@ export class SecurityHubJiraSync {
           newIssueInfo.key,
           issue_id,
           linkType,
-          linkDirection
+          linkDirection,
         );
       }
     } catch (e: any) {
@@ -450,7 +449,7 @@ export class SecurityHubJiraSync {
   async createJiraIssuesForNewFindings(
     jiraIssues: IssueObject[],
     shFindings: SecurityHubFinding[],
-    identifyingLabels: string[]
+    identifyingLabels: string[],
   ) {
     const updatesForReturn: UpdateForReturn[] = [];
     const existingJiraIssueTitles = jiraIssues.map((i) => i.fields.summary);
@@ -462,12 +461,12 @@ export class SecurityHubJiraSync {
       const finding = uniqueSecurityHubFindings[i];
       if (
         !existingJiraIssueTitles.includes(
-          `SecurityHub Finding - ${finding.title}`
+          `SecurityHub Finding - ${finding.title}`,
         )
       ) {
         const update = await this.createJiraIssueFromFinding(
           finding,
-          identifyingLabels
+          identifyingLabels,
         );
         updatesForReturn.push(update);
       }

@@ -13,7 +13,7 @@ export class Jira {
     Jira.checkEnvVars();
     this.jiraClosedStatuses = process.env.JIRA_CLOSED_STATUSES
       ? process.env.JIRA_CLOSED_STATUSES.split(",").map((status) =>
-          status.trim()
+          status.trim(),
         )
       : ["Done"];
     const jiraParams: JiraApiOptions = {
@@ -78,7 +78,7 @@ export class Jira {
         });
       } else {
         axiosHeader["Authorization"] = `Basic ${Buffer.from(
-          `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`
+          `${process.env.JIRA_USERNAME}:${process.env.JIRA_TOKEN}`,
         ).toString("base64")}`;
         await axios({
           method: "DELETE",
@@ -102,12 +102,12 @@ export class Jira {
       "JIRA_PROJECT",
     ];
     const missingEnvVars = requiredEnvVars.filter(
-      (envVar) => !process.env[envVar]
+      (envVar) => !process.env[envVar],
     );
 
     if (missingEnvVars.length) {
       throw new Error(
-        `Missing required environment variables: ${missingEnvVars.join(", ")}`
+        `Missing required environment variables: ${missingEnvVars.join(", ")}`,
       );
     }
   }
@@ -117,7 +117,7 @@ export class Jira {
   }
   createSearchLabels(
     identifyingLabels: string[],
-    config: LabelConfig[]
+    config: LabelConfig[],
   ): string[] {
     const labels: string[] = [];
     const fields = ["accountId", "region", "identify"];
@@ -134,17 +134,17 @@ export class Jira {
             labels.push(
               `${labelPrefix}${delimiter}${values[index]
                 ?.trim()
-                .replace(/ /g, "")}`
+                .replace(/ /g, "")}`,
             );
           }
         }
-      }
+      },
     );
 
     return labels;
   }
   async getAllSecurityHubIssuesInJiraProject(
-    identifyingLabels: string[]
+    identifyingLabels: string[],
   ): Promise<IssueObject[]> {
     const labelQueries = [...identifyingLabels, "security-hub"]
       .map((label) => Jira.formatLabelQuery(label))
@@ -162,20 +162,20 @@ export class Jira {
     }
     const projectQuery = `project = '${process.env.JIRA_PROJECT}'`;
     const statusQuery = `status not in ('${this.jiraClosedStatuses.join(
-      "','" // wrap each closed status in single quotes
+      "','", // wrap each closed status in single quotes
     )}')`;
     const fullQuery = [finalLabelQuery, projectQuery, statusQuery].join(
-      " AND "
+      " AND ",
     );
     // We  want to do everything possible to prevent matching tickets that we shouldn't
     if (!fullQuery.includes(Jira.formatLabelQuery("security-hub"))) {
       throw new Error(
-        "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue"
+        "ERROR:  Your query does not include the 'security-hub' label, and is too broad.  Refusing to continue",
       );
     }
     if (!fullQuery.match(Jira.formatLabelQuery("[0-9]{12}"))) {
       throw new Error(
-        "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue"
+        "ERROR:  Your query does not include an AWS Account ID as a label, and is too broad.  Refusing to continue",
       );
     }
 
@@ -193,7 +193,7 @@ export class Jira {
       } while (totalIssuesReceived < results.total);
     } catch (e: any) {
       throw new Error(
-        `Error getting Security Hub issues from Jira: ${e.message}`
+        `Error getting Security Hub issues from Jira: ${e.message}`,
       );
     }
     return allIssues;
@@ -204,7 +204,7 @@ export class Jira {
 
       // Get priority IDs in descending order
       const descendingPriorityIds = priorities.map(
-        (priority: { id: any }) => priority.id
+        (priority: { id: any }) => priority.id,
       );
 
       return descendingPriorityIds;
@@ -229,9 +229,8 @@ export class Jira {
       issue.fields.project = { key: process.env.JIRA_PROJECT };
 
       const newIssue = await this.jira.addNewIssue(issue);
-      newIssue[
-        "webUrl"
-      ] = `https://${process.env.JIRA_HOST}/browse/${newIssue.key}`;
+      newIssue["webUrl"] =
+        `https://${process.env.JIRA_HOST}/browse/${newIssue.key}`;
       await this.removeCurrentUserAsWatcher(newIssue.key);
       return newIssue;
     } catch (e: any) {
@@ -242,7 +241,7 @@ export class Jira {
     newIssueKey: string,
     issueID: string,
     linkType = "Relates",
-    linkDirection = "inward"
+    linkDirection = "inward",
   ) {
     const linkData = {
       type: { name: linkType },
@@ -263,7 +262,7 @@ export class Jira {
   }
   async updateIssueTitleById(
     issueId: string,
-    updatedIssue: Partial<IssueObject>
+    updatedIssue: Partial<IssueObject>,
   ) {
     try {
       const response = await this.jira.updateIssue(issueId, updatedIssue);
@@ -291,7 +290,7 @@ export class Jira {
 
       const possibleTransitions = transitions.filter(
         (transition: { from: { name: string } }) =>
-          transition.from.name === status
+          transition.from.name === status,
       );
 
       for (const transition of possibleTransitions) {
@@ -324,7 +323,7 @@ export class Jira {
           const targetTransitions = availableTransitions.transitions.filter(
             (transition: { name: string }) =>
               !opposedStatuses.includes(transition.name.toLowerCase()) &&
-              !processedTransitions.includes(transition.name.toLowerCase())
+              !processedTransitions.includes(transition.name.toLowerCase()),
           );
           if (targetTransitions.length <= 0) {
             if (!processedTransitions.length) {
@@ -339,7 +338,7 @@ export class Jira {
               throw new Error(
                 "Unsupported Workflow: does not contain any of " +
                   doneStatuses.join(",") +
-                  "statuses"
+                  "statuses",
               );
             }
             break;
@@ -350,7 +349,7 @@ export class Jira {
             transition: { id: transitionId },
           });
           console.log(
-            `Transitioned issue ${issueKey} to the next stage: ${targetTransitions[0].name}`
+            `Transitioned issue ${issueKey} to the next stage: ${targetTransitions[0].name}`,
           );
         } else {
           break;
@@ -366,7 +365,7 @@ export class Jira {
     try {
       const transitions = await this.jira.listTransitions(issueKey);
       const doneTransition = transitions.transitions.find(
-        (t: { name: string }) => t.name === "Done"
+        (t: { name: string }) => t.name === "Done",
       );
 
       if (!doneTransition) {
