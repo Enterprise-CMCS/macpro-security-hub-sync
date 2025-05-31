@@ -39,14 +39,16 @@ function testThrowsExceptionForInvalidSeverity() {
           CreatedAt: new Date().toISOString(),
           UpdatedAt: new Date().toISOString(),
           Title: "sample ticket",
-          Severity: { Label: SeverityLabel.LOW },
+          Severity: { Label: "INVALID_SEVERITY" as any },
           Description: "mock description",
           Resources: [],
         } as AwsSecurityFinding,
       ],
     });
     const sHJS = new SecurityHubJiraSync({});
-    await expect(sHJS.sync()).rejects.toThrow("Invalid severity: test");
+    await expect(sHJS.sync()).rejects.toThrow(
+      "Invalid severity: INVALID_SEVERITY",
+    );
   });
 }
 
