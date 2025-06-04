@@ -1,13 +1,9 @@
 import { it, describe, expect } from "vitest";
 import "./mockClients";
 import { SecurityHub } from "../libs";
-import { Constants } from "./constants";
-import {
-  AwsSecurityFinding,
-  GetFindingsCommand,
-} from "@aws-sdk/client-securityhub";
+import { GetFindingsCommand } from "@aws-sdk/client-securityhub";
 import { iamClient, sHClient } from "./mockClients";
-import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
+import { ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 
 describe("SecurityHub tests", () => {
   testSecurityHubGetAllFindingsWithEnvVarDelay();
@@ -27,7 +23,7 @@ function testSecurityHubGetAllFindingsWithEnvVarDelay() {
 
     const result = await securityHub.getAllActiveFindings();
 
-    expect(securityHub.accountAlias).toEqual("my-account-alias");
+    expect(securityHub.getAccountAlias()).toEqual("my-account-alias");
   });
 }
 function testSecurityHubGetAllFindingsWithoutEnvVarDelay() {
@@ -40,7 +36,7 @@ function testSecurityHubGetAllFindingsWithoutEnvVarDelay() {
 
     const result = await securityHub.getAllActiveFindings();
 
-    expect(securityHub.accountAlias).toEqual("my-account-alias");
+    expect(securityHub.getAccountAlias()).toEqual("my-account-alias");
   });
 }
 
@@ -52,7 +48,7 @@ function testGetAllActiveFindingsThrowsException() {
       severities: ["CRITICAL"],
     });
     await expect(securityHub.getAllActiveFindings()).rejects.toThrow(
-      "Test error"
+      "Test error",
     );
   });
 }
@@ -61,7 +57,7 @@ function testAccountAliasUndefined() {
   it("handles undefined AccountAliases", async () => {
     iamClient.on(ListAccountAliasesCommand, {}).resolves({});
     const securityHub = new SecurityHub({});
-    expect(securityHub.accountAlias).toEqual("");
+    expect(securityHub.getAccountAlias()).toEqual("");
   });
 }
 

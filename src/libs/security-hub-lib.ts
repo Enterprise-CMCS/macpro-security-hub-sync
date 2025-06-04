@@ -6,6 +6,8 @@ import {
   Remediation,
   AwsSecurityFinding,
   AwsSecurityFindingFilters,
+  StringFilter,
+  StringFilterComparison,
 } from "@aws-sdk/client-securityhub";
 
 export interface Resource {
@@ -31,7 +33,7 @@ export interface SecurityHubFinding {
 
 export class SecurityHub {
   private readonly region: string;
-  private readonly severityLabels: { Comparison: string; Value: string }[];
+  private readonly severityLabels: StringFilter[];
   private accountAlias = "";
 
   constructor({
@@ -40,16 +42,20 @@ export class SecurityHub {
   } = {}) {
     this.region = region;
     this.severityLabels = severities.map((severity) => ({
-      Comparison: "EQUALS",
+      Comparison: StringFilterComparison.EQUALS,
       Value: severity,
     }));
-    this.getAccountAlias().catch((error) => console.error(error));
+    this.fetchAccountAlias().catch((error) => console.error(error));
   }
 
-  private async getAccountAlias(): Promise<void> {
+  private async fetchAccountAlias(): Promise<void> {
     const iamClient = new IAMClient({ region: this.region });
     const response = await iamClient.send(new ListAccountAliasesCommand({}));
     this.accountAlias = response.AccountAliases?.[0] || "";
+  }
+
+  public getAccountAlias() {
+    return this.accountAlias;
   }
 
   async getAllActiveFindings() {
@@ -106,7 +112,7 @@ export class SecurityHub {
             Filters: filters,
             MaxResults: 100, // this is the maximum allowed per page
             NextToken: nextToken,
-          })
+          }),
         );
         if (response && response.Findings) {
           for (const finding of response.Findings) {
@@ -132,7 +138,7 @@ export class SecurityHub {
   }
 
   awsSecurityFindingToSecurityHubFinding(
-    finding: AwsSecurityFinding
+    finding: AwsSecurityFinding,
   ): SecurityHubFinding {
     if (!finding) return {};
     return {

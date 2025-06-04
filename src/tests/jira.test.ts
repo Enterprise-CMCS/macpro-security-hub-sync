@@ -65,7 +65,7 @@ function testThrowsErrorIfSearchQueryMissingAwsAccountId() {
   it("throws an error if searchQuery is missing AWS account ID label", async () => {
     const jira = new Jira();
     await expect(
-      jira.getAllSecurityHubIssuesInJiraProject(["some-label"])
+      jira.getAllSecurityHubIssuesInJiraProject(["some-label"]),
     ).rejects.toThrow();
   });
 }
@@ -80,9 +80,9 @@ function testThrowsExceptionInGetAllSecurityHubIssuesInJiraProject() {
     };
 
     await expect(
-      jira.getAllSecurityHubIssuesInJiraProject(["123456789012"])
+      jira.getAllSecurityHubIssuesInJiraProject(["123456789012"]),
     ).rejects.toThrow(
-      "Error getting Security Hub issues from Jira: Cannot read properties of undefined"
+      "Error getting Security Hub issues from Jira: Cannot read properties of undefined",
     );
   });
 }
@@ -104,7 +104,7 @@ function testErrorRemovingWatcherFromJiraIssue() {
 
     expect(consoleMock).toHaveBeenLastCalledWith(
       "Error creating issue or removing watcher:",
-      new Error("Test Error")
+      new Error("Test Error"),
     );
   });
 }
@@ -130,7 +130,7 @@ function testMissingRequiredEnvVar() {
   it("Missing a required environment variable", () => {
     delete process.env.JIRA_PROJECT;
     expect(() => new Jira()).toThrow(
-      "Missing required environment variables: JIRA_PROJECT"
+      "Missing required environment variables: JIRA_PROJECT",
     );
   });
 }

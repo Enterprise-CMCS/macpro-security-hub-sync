@@ -108,3 +108,6 @@ build
 
 # local test
 _test.sh
+
+# clinerules
+.clinerules/
