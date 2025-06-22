@@ -1,0 +1,59 @@
+{
+  "name": "macpro-security-hub-sync",
+  "description": "Syncs AWS Security Hub findings to Atlassian Jira",
+  "longDescription": "",
+  "status": "",
+  "permissions": {
+    "license": [
+      {
+        "name": "",
+        "URL": ""
+      }
+    ],
+    "usageType": "",
+    "exemptionText": ""
+  },
+  "organization": "",
+  "repositoryURL": "https://github.com/Enterprise-CMCS/macpro-security-hub-sync",
+  "projectURL": "",
+  "repositoryHost": "github",
+  "repositoryVisibility": "",
+  "vcs": "git",
+  "laborHours": 3391,
+  "reuseFrequency": {
+    "forks": 0,
+    "clones": 0
+  },
+  "platforms": [],
+  "categories": [],
+  "softwareType": "",
+  "languages": [
+    "TypeScript"
+  ],
+  "maintenance": "",
+  "contractNumber": "",
+  "date": {
+    "created": "2023-01-23T21:47:31Z",
+    "lastModified": "2025-06-22T04:46:09Z",
+    "metaDataLastUpdated": "2025-06-22T05:33:19.877Z"
+  },
+  "tags": [],
+  "contact": {
+    "email": "",
+    "name": ""
+  },
+  "feedbackMechanisms": [
+    "https://github.com/Enterprise-CMCS/macpro-security-hub-sync/issues"
+  ],
+  "localisation": false,
+  "repositoryType": "",
+  "userInput": false,
+  "fismaLevel": "",
+  "group": "",
+  "projects": [],
+  "systems": [],
+  "upstream": "",
+  "subsetInHealthcare": [],
+  "userType": [],
+  "maturityModelTier": 0
+}
