@@ -1,0 +1,59 @@
+{
+  "name": "macpro-security-hub-sync",
+  "description": "Syncs AWS Security Hub findings to Atlassian Jira",
+  "longDescription": "This deprecated NPM module provides automated synchronization between AWS Security Hub findings and Atlassian Jira issues for CMS security operations. The package creates, updates, and manages Jira tickets based on Security Hub findings, supporting configurable severity filtering, custom labeling, and automatic ticket closure when findings are resolved. Built with TypeScript and leveraging the AWS SDK, it integrates with AWS Security Hub, STS, and IAM services to provide comprehensive security findings management. The tool supports multi-account and multi-region deployments, custom Jira field mapping, and advanced features like issue linking and automated ticket assignment. While deprecated in favor of mac-fc-security-hub-visibility v2, this version remains available for teams using Atlassian Jira who require immediate security findings automation.",
+  "status": "Deprecated",
+  "permissions": {
+    "licenses": [
+      {
+        "name": "CC0-1.0",
+        "URL": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+      }
+    ],
+    "usageType": "openSource",
+    "exemptionText": ""
+  },
+  "organization": "Centers for Medicare & Medicaid Services",
+  "repositoryURL": "https://github.com/Enterprise-CMCS/macpro-security-hub-sync",
+  "projectURL": "https://www.npmjs.com/package/@enterprise-cmcs/macpro-security-hub-sync",
+  "repositoryHost": "github.com/Enterprise-CMCS",
+  "repositoryVisibility": "public",
+  "vcs": "git",
+  "laborHours": 3391,
+  "reuseFrequency": {
+    "forks": 0,
+    "clones": 0
+  },
+  "platforms": ["web", "linux", "other"],
+  "categories": ["data-analytics", "it-development"],
+  "softwareType": "library",
+  "languages": [
+    "TypeScript"
+  ],
+  "maintenance": "contract",
+  "contractNumber": "75FCMC24F0027",
+  "date": {
+    "created": "2023-01-23T21:47:31Z",
+    "lastModified": "2025-06-22T04:46:09Z",
+    "metaDataLastUpdated": "2025-06-22T05:33:19.877Z"
+  },
+  "tags": ["security", "aws", "jira", "automation", "security-hub", "findings", "sync", "deprecated"],
+  "contact": {
+    "email": "bpaige@gswell.com",
+    "name": "Benjamin Paige"
+  },
+  "feedbackMechanisms": [
+    "https://github.com/Enterprise-CMCS/macpro-security-hub-sync/issues"
+  ],
+  "localisation": false,
+  "repositoryType": "libraries",
+  "userInput": false,
+  "fismaLevel": "Moderate",
+  "group": "MACPRO",
+  "projects": ["MACPRO"],
+  "systems": ["AWS Security Hub", "Atlassian Jira", "AWS STS", "AWS IAM"],
+  "upstream": "https://github.com/Enterprise-CMCS/macpro-security-hub-sync/network/dependencies",
+  "subsetInHealthcare": ["Policy", "Operational", "Medicare", "Medicaid"],
+  "userType": ["Government"],
+  "maturityModelTier": 2
+}
